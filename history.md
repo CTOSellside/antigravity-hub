@@ -14,8 +14,10 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 
 - **Hito**: Automatización de Despliegue (Trigger 2nd Gen).
 - **Detalle**: Conexión de GitHub y creación de disparador en `southamerica-west1`.
-- **Hito**: Corrección de error de Logs en Cloud Build.
-- **Detalle**: Se añadió `logging: CLOUD_LOGGING_ONLY` al `cloudbuild.yaml` para permitir despliegues sin buckets de logs regionales.
-- **Estado**: Fix aplicado.
+- **Hito**: Despliegue exitoso en Cloud Run.
+- **Detalle**: La app `hello-world` está viva en `https://hello-world-nm65jwwkta-uc.a.run.app`.
+- **Hito**: Solución de error 403 (IAM Permissions).
+- **Detalle**: Se otorgó el rol `roles/run.invoker` a `allUsers` para permitir acceso público.
+- **Estado**: Sprint 1 completado y verificado.
 
 
