@@ -14,6 +14,8 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 
 - **Hito**: Automatización de Despliegue (Trigger 2nd Gen).
 - **Detalle**: Conexión de GitHub y creación de disparador en `southamerica-west1`.
-- **Estado**: Listo para producción.
+- **Hito**: Corrección de error de Logs en Cloud Build.
+- **Detalle**: Se añadió `logging: CLOUD_LOGGING_ONLY` al `cloudbuild.yaml` para permitir despliegues sin buckets de logs regionales.
+- **Estado**: Fix aplicado.
 
 

@@ -25,3 +25,6 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/hello-world'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
