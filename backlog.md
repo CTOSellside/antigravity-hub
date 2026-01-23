@@ -11,6 +11,8 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 - [ ] Configurar primer proyecto específico <!-- id: 4 -->
 - [ ] Vincular con GitHub Repository <!-- id: 5 -->
 - [ ] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
+- [ ] Desarrollar Dashboard de Proyectos (Frontend) <!-- id: 32 -->
+
 
 ### In Progress
 

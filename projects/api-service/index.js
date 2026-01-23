@@ -1,9 +1,15 @@
 const express = require('express');
+const cors = require('cors');
 const { Firestore } = require('@google-cloud/firestore');
 const app = express();
 const port = process.env.PORT || 8080;
 
+app.use(cors());
 app.use(express.json());
+
+// Startup Log
+console.log('--- API BOOTING ---');
+console.log('Routes: /api, /api/projects (GET/POST)');
 
 // Initialize Firestore
 const firestore = new Firestore();

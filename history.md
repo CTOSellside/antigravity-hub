@@ -16,8 +16,8 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Detalle**: Conexión de GitHub y creación de disparador en `southamerica-west1`.
 - **Hito**: Despliegue exitoso en Cloud Run.
 - **Detalle**: La app `hello-world` está viva en `https://hello-world-nm65jwwkta-uc.a.run.app`.
-- **Hito**: Solución de error 403 (IAM Permissions).
-- **Detalle**: Se otorgó el rol `roles/run.invoker` a `allUsers` para permitir acceso público.
-- **Estado**: Sprint 1 completado y verificado.
+- **Hito**: Persistencia con Firestore.
+- **Detalle**: Integración de `@google-cloud/firestore` en `api-service` para registro de proyectos.
+- **Estado**: Implementado y en despliegue.
 
 
