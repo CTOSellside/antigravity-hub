@@ -13,10 +13,14 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 - [ ] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
 
 ### In Progress
-- [/] Configuración de Cloud Build <!-- id: 7 -->
+- [/] Despliegue inicial de `hello-world` <!-- id: 7 -->
 
 ### Done
 - [x] Definir estrategia de múltiples perfiles <!-- id: 8 -->
 - [x] Estructuración del Project Hub <!-- id: 7 -->
 - [x] Crear proyecto de ejemplo `hello-world` <!-- id: 20 -->
+- [x] Configurar múltiples cuentas de GCP (Perfiles gcloud) <!-- id: 27 -->
+- [x] Conectar repositorio de GitHub (2da Gen) <!-- id: 28 -->
+- [x] Crear Trigger de Cloud Build <!-- id: 29 -->
+
 
