@@ -22,6 +22,8 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+      - '--set-secrets=SS_TEST_SECRET=SS_TEST_SECRET:latest'
+
 
 images:
   - 'gcr.io/$PROJECT_ID/api-service'
