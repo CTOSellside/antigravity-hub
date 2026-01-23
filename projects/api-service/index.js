@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Startup Log
-console.log('--- API BOOTING ---');
+console.log('--- API BOOTING (v1.0.2) ---');
 console.log('Routes: /api, /api/projects (GET/POST)');
 
 // Initialize Firestore
