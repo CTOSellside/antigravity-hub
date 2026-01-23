@@ -1,0 +1,22 @@
+# Global Project Backlog
+
+Este archivo centraliza todas las tareas de alto nivel para los diferentes proyectos gestionados por Antigravity.
+
+## Proyectos Activos
+- **Admin**: Configuración inicial y mantenimiento del Hub.
+
+## Backlog General
+
+### To Do
+- [ ] Configurar primer proyecto específico <!-- id: 4 -->
+- [ ] Vincular con GitHub Repository <!-- id: 5 -->
+- [ ] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
+
+### In Progress
+- [/] Configuración de Cloud Build <!-- id: 7 -->
+
+### Done
+- [x] Definir estrategia de múltiples perfiles <!-- id: 8 -->
+- [x] Estructuración del Project Hub <!-- id: 7 -->
+- [x] Crear proyecto de ejemplo `hello-world` <!-- id: 20 -->
+
