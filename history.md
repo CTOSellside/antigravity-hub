@@ -9,15 +9,10 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Razón**: Permite escalabilidad, separación de secretos en GCP y despliegues independientes a Cloud Run.
 - **Estado**: Implementado.
 
-- **Hito**: Configuración Multi-Cuenta GCP.
-- **Detalle**: Creación de perfil `cto-sellside` vinculado a `antigravity-cto`.
-
-- **Hito**: Automatización de Despliegue (Trigger 2nd Gen).
-- **Detalle**: Conexión de GitHub y creación de disparador en `southamerica-west1`.
-- **Hito**: Despliegue exitoso en Cloud Run.
-- **Detalle**: La app `hello-world` está viva en `https://hello-world-nm65jwwkta-uc.a.run.app`.
-- **Hito**: Persistencia con Firestore.
-- **Detalle**: Integración de `@google-cloud/firestore` en `api-service` para registro de proyectos.
-- **Estado**: Implementado y en despliegue.
+- **Hito**: Sistema Completo y Verificado.
+- **Detalle**: Arquitectura Monorepo con 3 servicios (Frontend, API, Demo) desplegados en Cloud Run.
+- **Seguridad**: Secretos centralizados en Secret Manager.
+- **Datos**: Persistencia en tiempo real con Firestore.
+- **Estado**: Sprint 1 Finalizado con éxito rotundo.
 
 
