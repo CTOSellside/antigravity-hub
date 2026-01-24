@@ -15,9 +15,16 @@ const ChatBubble = () => {
         if (!input.trim()) return;
 
         const userMsg = { role: 'user', text: input };
-        setMessages([...messages, userMsg]);
+        const newMessages = [...messages, userMsg]; // Immediate update for history calculation
+        setMessages(newMessages);
         setInput('');
         setLoading(true);
+
+        // Convert local messages to Genkit History format
+        const history = newMessages.slice(0, -1).map(msg => ({
+            role: msg.role === 'ai' ? 'model' : 'user',
+            content: [{ text: msg.text }]
+        }));
 
         try {
             const token = await auth.currentUser.getIdToken();
@@ -28,7 +35,8 @@ const ChatBubble = () => {
             const body = JSON.stringify({
                 data: {
                     prompt: input,
-                    context_type: 'MOM'
+                    context_type: 'MOM',
+                    history: history // Passing context buffer
                 }
             });
 
