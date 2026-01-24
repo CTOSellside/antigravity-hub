@@ -4,8 +4,8 @@ const vertexAI = require('@genkit-ai/vertexai');
 const genkitExpress = require('@genkit-ai/express');
 const xmlrpc = require('xmlrpc');
 
-// --- AGENTIC AI SERVICE v3.0 ---
-console.log('[INIT] AI Service starting (Agentic Mode)...');
+// --- AGENTIC AI SERVICE v3.1 (Tool Loop Enabled) ---
+console.log('[INIT] AI Service starting (Agentic Mode + Loop)...');
 
 // Initialize Firebase
 admin.initializeApp();
@@ -89,6 +89,11 @@ const searchInventory = ai.defineTool(
             };
 
             const cleanQuery = input.query.replace(/[?¿!¡.,]/g, '').trim();
+            // If query is "ALL_STOCK" or mostly empty, handle fallback
+            if (cleanQuery === 'ALL_STOCK' || cleanQuery.length < 2) {
+                // Fallback flow handled below
+            }
+
             const terms = cleanQuery.split(/\s+/).filter(t => t.length > 2);
 
             let products = [];
@@ -106,7 +111,6 @@ const searchInventory = ai.defineTool(
 
             // 2. Loose Search (OR / Specific Fallback)
             if (products.length === 0 && terms.length > 0) {
-                // Just search for the longest/most significant term
                 const significantTerm = terms.reduce((a, b) => a.length > b.length ? a : b);
                 console.log(`[ODOO-TOOL] Strict failed. Trying Loose Search for: ${significantTerm}`);
 
@@ -120,9 +124,6 @@ const searchInventory = ai.defineTool(
                 console.log(`[ODOO-TOOL] No results. Fetching Top Stock fallback.`);
                 const fallbackDomain = [['qty_available', '>', 0], ['type', 'in', ['product', 'consu']]];
                 const allStock = await searchOdoo(fallbackDomain);
-                // Sort manually desc (since we pulled a small batch, this might be imperfect but better than 0)
-                // Actually for true top stock we should sort in database, but computed fields limit that.
-                // We'll stick to 'recent active' as fallback.
                 products = allStock;
                 searchType = "General Stock";
             }
@@ -151,40 +152,71 @@ const chatFlow = ai.defineFlow(
             context_type: z.string().optional()
         }),
         outputSchema: z.string(),
-        tools: [searchInventory], // <--- Tool Registered Here
+        tools: [searchInventory],
     },
     async (input) => {
         console.log(`[FLOW-START] Prompt: "${input.prompt}"`);
 
-        // System Prompt: Gives the AI identity and instructions to use tools.
+        // System Prompt
         let systemInstructions = `Eres 'La Brújula', el asistente experto en logística de RepuestosMOM.
         
-        TU MISIÓN:
-        Ayudar a Javi a gestionar el inventario usando DATOS REALES de Odoo.
-        
-        INSTRUCCIONES CLAVE:
-        1. Si Javi pregunta por stock, precios o productos -> USA LA HERRAMIENTA 'searchInventory' INMEDIATAMENTE.
-        2. No inventes datos. Usa solo lo que devuelve la herramienta.
-        3. Si la herramienta devuelve productos, preséntalos de forma clara y ejecutiva.
-        4. Si es una búsqueda vaga (ej. "dame stock"), la herramienta ya maneja el fallback, tú solo reporta el resultado.
+        INSTRUCCIONES:
+        1. Para cualquier consulta sobre inventario, USA la herramienta 'searchInventory'.
+        2. Si la herramienta devuelve resultados, úsalos para responder.
+        3. Si la herramienta no encuentra nada, dilo claramente.
         `;
 
         if (input.context_type !== 'MOM') {
-            systemInstructions += "\n(Nota: Si la consulta no es sobre inventario, responde como asistente general de proyectos).";
+            systemInstructions += "\n(Si no es sobre inventario, responde como asistente general).";
         }
 
         try {
-            const response = await ai.generate({
-                model: vertexAI.gemini20Flash, // Stable Model
+            // 1. First Generation Call (Model decides to use tool)
+            const llmResponse = await ai.generate({
+                model: vertexAI.gemini20Flash,
                 prompt: input.prompt,
                 system: systemInstructions,
-                config: {
-                    temperature: 0.2, // Low temp for factual data
-                }
+                tools: [searchInventory], // <--- Tools enabled
+                config: { temperature: 0.2 }
             });
 
-            console.log(`[FLOW-END] Response generated.`);
-            return response.text;
+            // 2. Check for Tool Calls
+            const toolCalls = llmResponse.toolCalls;
+
+            if (toolCalls && toolCalls.length > 0) {
+                // Determine if we need to run tools
+                // In this simple flow, we only have one tool call expected per turn usually
+                const toolCall = toolCalls[0];
+
+                if (toolCall.tool.name === 'searchInventory') {
+                    console.log(`[FLOW-LOOP] Executing Tool: ${toolCall.tool.name}`);
+
+                    // Execute the Tool
+                    const toolOutput = await searchInventory(toolCall.toolInput);
+
+                    // 3. Second Generation Call (Feed tool output back to model for final answer)
+                    // We construct a history-like sequence: User Prompt -> Tool Call -> Tool Output
+                    const finalResponse = await ai.generate({
+                        model: vertexAI.gemini20Flash,
+                        prompt: input.prompt, // Original prompt
+                        system: systemInstructions,
+                        history: [
+                            { role: 'model', content: [{ toolRequest: { name: toolCall.tool.name, ref: toolCall.ref, input: toolCall.toolInput } }] },
+                            { role: 'tool', content: [{ toolResponse: { name: toolCall.tool.name, ref: toolCall.ref, output: toolOutput } }] }
+                        ],
+                        tools: [searchInventory],
+                        config: { temperature: 0.2 } // Ensure it doesn't hallucinate a second tool call
+                    });
+
+                    console.log(`[FLOW-END] Response with tool data.`);
+                    return finalResponse.text;
+                }
+            }
+
+            // No tool used, just return text
+            console.log(`[FLOW-END] Direct response.`);
+            return llmResponse.text;
+
         } catch (e) {
             console.error('[FLOW-FATAL]', e);
             throw new Error(`Flow Error: ${e.message}`);
