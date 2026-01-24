@@ -4,7 +4,7 @@ const vertexAI = require('@genkit-ai/vertexai');
 const genkitExpress = require('@genkit-ai/express');
 const xmlrpc = require('xmlrpc');
 
-// --- AGENTIC AI SERVICE v3.1 (Tool Loop Enabled) ---
+// --- AGENTIC AI SERVICE v3.2 (History + Strict Grounding + Stemming) ---
 console.log('[INIT] AI Service starting (Agentic Mode + Loop)...');
 
 // Initialize Firebase
@@ -88,11 +88,11 @@ const searchInventory = ai.defineTool(
                 });
             };
 
-            const cleanQuery = input.query.replace(/[?¿!¡.,]/g, '').trim();
-            // If query is "ALL_STOCK" or mostly empty, handle fallback
-            if (cleanQuery === 'ALL_STOCK' || cleanQuery.length < 2) {
-                // Fallback flow handled below
-            }
+            let cleanQuery = input.query.replace(/[?¿!¡.,]/g, '').trim();
+
+            // Basic Stemming: Handle plurals (radiadores -> radiador)
+            if (cleanQuery.endsWith('es')) cleanQuery = cleanQuery.slice(0, -2);
+            else if (cleanQuery.endsWith('s')) cleanQuery = cleanQuery.slice(0, -1);
 
             const terms = cleanQuery.split(/\s+/).filter(t => t.length > 2);
 
@@ -106,7 +106,7 @@ const searchInventory = ai.defineTool(
 
                 console.log(`[ODOO-TOOL] Trying Strict Search: ${terms.join(', ')}`);
                 products = await searchOdoo(strictDomain);
-                searchType = "Exact Match";
+                searchType = "EXACT MATCH";
             }
 
             // 2. Loose Search (OR / Specific Fallback)
@@ -116,7 +116,7 @@ const searchInventory = ai.defineTool(
 
                 const looseDomain = [['type', 'in', ['product', 'consu']], ['name', 'ilike', significantTerm]];
                 products = await searchOdoo(looseDomain);
-                searchType = "Partial Match";
+                searchType = "PARTIAL MATCH";
             }
 
             // 3. Fallback (Top Stock)
@@ -125,15 +125,19 @@ const searchInventory = ai.defineTool(
                 const fallbackDomain = [['qty_available', '>', 0], ['type', 'in', ['product', 'consu']]];
                 const allStock = await searchOdoo(fallbackDomain);
                 products = allStock;
-                searchType = "General Stock";
+                searchType = "FALLBACK (NO MATCH)";
             }
 
             // Format Output
             const duration = Date.now() - startTime;
-            if (products.length === 0) return `No products found in Odoo inventory (Time: ${duration}ms).`;
+            if (products.length === 0) return `No products found in Odoo inventory matching '${input.query}'. (Time: ${duration}ms).`;
 
             const list = products.map(p => `- ${p.name}: ${p.qty_available} units ($${p.list_price})`).join('\n');
-            return `Found ${products.length} products (${searchType}) in ${duration}ms:\n${list}`;
+
+            if (searchType.includes("FALLBACK")) {
+                return `WARNING: NO EXACT MATCHES found for '${input.query}'. \nHere is a list of GENERIC available products instead (DO NOT claim these are '${input.query}'):\n${list}`;
+            }
+            return `SUCCESS: Found ${products.length} products matching '${input.query}' (${searchType}):\n${list}`;
 
         } catch (error) {
             console.error('[TOOL-ERROR]', error);
@@ -164,8 +168,8 @@ const chatFlow = ai.defineFlow(
         
         REGLAS DE ORO (STRICT GROUNDING):
         1. Tu única fuente de verdad es la herramienta 'searchInventory'.
-        2. Si la herramienta dice "No products found", TU RESPUESTA DEBE SER: "No encontré información sobre eso en el inventario". NO inventes stock.
-        3. Si no estás seguro de qué busca el usuario, PREGUNTA para aclarar (ej. "¿Te refieres al radiador de agua o de calefacción?").
+        2. Si la herramienta dice "WARNING: NO EXACT MATCHES", DILE AL USUARIO QUE NO TENEMOS ESE PRODUCTO ESPECÍFICO. No inventes que los productos genéricos son lo que busca.
+        3. Si la herramienta dice "No products found", di simplemente "No encontré información sobre eso".
         4. Sé conciso y profesional. Muestra precios y cantidades exactas devueltas por la herramienta.
         `;
 
@@ -175,7 +179,6 @@ const chatFlow = ai.defineFlow(
 
         try {
             // Prepare History
-            // Ensure strict types for Genkit if needed, but z.any() + pass-through usually works for raw objects
             const history = input.history || [];
 
             // 1. First Generation Call (Model decides to use tool)
@@ -193,7 +196,6 @@ const chatFlow = ai.defineFlow(
 
             if (toolCalls && toolCalls.length > 0) {
                 // Determine if we need to run tools
-                // In this simple flow, we only have one tool call expected per turn usually
                 const toolCall = toolCalls[0];
 
                 if (toolCall.tool.name === 'searchInventory') {
@@ -203,17 +205,17 @@ const chatFlow = ai.defineFlow(
                     const toolOutput = await searchInventory(toolCall.toolInput);
 
                     // 3. Second Generation Call (Feed tool output back to model for final answer)
-                    // We construct a history-like sequence: User Prompt -> Tool Call -> Tool Output
                     const finalResponse = await ai.generate({
                         model: vertexAI.gemini20Flash,
                         prompt: input.prompt, // Original prompt
                         system: systemInstructions,
                         history: [
+                            ...history, // Include previous history
                             { role: 'model', content: [{ toolRequest: { name: toolCall.tool.name, ref: toolCall.ref, input: toolCall.toolInput } }] },
                             { role: 'tool', content: [{ toolResponse: { name: toolCall.tool.name, ref: toolCall.ref, output: toolOutput } }] }
                         ],
                         tools: [searchInventory],
-                        config: { temperature: 0.2 } // Ensure it doesn't hallucinate a second tool call
+                        config: { temperature: 0.1 }
                     });
 
                     console.log(`[FLOW-END] Response with tool data.`);
@@ -238,7 +240,8 @@ const chatFlow = ai.defineFlow(
                     model: vertexAI.gemini20Flash,
                     prompt: input.prompt,
                     system: systemInstructions + `\n\n[SYSTEM UPDATE]: I executed the tool scan you requested. Result: ${toolOutput}. Please summarize this for the user.`,
-                    config: { temperature: 0.2 }
+                    history: history,
+                    config: { temperature: 0.1 }
                 });
                 return finalResponse.text;
             }
