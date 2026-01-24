@@ -56,7 +56,7 @@ const chatFlow = ai.defineFlow(
 
 // Start the Genkit server (Express-based)
 // This exposes each flow as a POST endpoint: /chatFlow
-genkitExpress.startFlowsServer({
+genkitExpress.startFlowServer({
     flows: [chatFlow],
     port: 8080,
     cors: { origin: '*' } // Enable CORS for the Dashboard
