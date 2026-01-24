@@ -2,15 +2,16 @@ const admin = require('firebase-admin');
 const { genkit, z } = require('genkit');
 const vertexAI = require('@genkit-ai/vertexai');
 const genkitExpress = require('@genkit-ai/express');
+const xmlrpc = require('xmlrpc');
 
-console.log('[DEBUG] Genkit Package Keys:', Object.keys(require('genkit')));
-console.log('[DEBUG] VertexAI Package Keys:', Object.keys(vertexAI));
-console.log('[DEBUG] Express Package Keys:', Object.keys(genkitExpress));
+// --- DEEP LOGGING INIT ---
+console.log('[INIT] AI Service starting...');
+console.log('[DEBUG] VertexAI Keys:', Object.keys(vertexAI));
 
-// Initialize Firebase Admin for Firebase service context if needed
+// Initialize Firebase
 admin.initializeApp();
 
-// Configure Genkit with Vertex AI
+// Configure Genkit
 const ai = genkit({
     plugins: [
         vertexAI.vertexAI({
@@ -20,13 +21,7 @@ const ai = genkit({
     ],
 });
 
-/**
- * Define the Brújula Chat Flow
- * This is a structured, observable unit of AI logic.
- */
-const xmlrpc = require('xmlrpc');
-
-// Odoo Configuration (Hardcoded for verification as requested)
+// Odoo Config
 const ODOO_CONFIG = {
     url: 'https://www.repuestosmom.cl',
     host: 'www.repuestosmom.cl',
@@ -46,19 +41,20 @@ const chatFlow = ai.defineFlow(
         outputSchema: z.string(),
     },
     async (input) => {
-        console.log(`[Genkit] Flow started for: ${input.prompt} (Context: ${input.context_type})`);
+        const startTime = Date.now();
+        console.log(`[FLOW-START] Prompt: "${input.prompt}" | Context: ${input.context_type}`);
 
         let contextData = "";
         let systemInstructions = "Eres 'La Brújula', el asistente personal de Javi para gestionar el ecosistema Antigravity. ";
 
         if (input.context_type === 'MOM') {
-            systemInstructions += "Eres un experto en el inventario real de RepuestosMOM usando datos de Odoo. ";
+            systemInstructions += "Actúa como experto en el inventario de RepuestosMOM. ";
+            console.log('[ODOO] Starting connection check...');
 
-            // Connect to Odoo
             try {
+                const odooStart = Date.now();
                 const common = xmlrpc.createSecureClient({ host: ODOO_CONFIG.host, port: ODOO_CONFIG.port, path: '/xmlrpc/2/common' });
 
-                // We wrap XML-RPC in a promise for Genkit flow
                 const uid = await new Promise((resolve, reject) => {
                     common.methodCall('authenticate', [ODOO_CONFIG.db, ODOO_CONFIG.username, ODOO_CONFIG.password, {}], (err, val) => {
                         if (err) reject(err); else resolve(val);
@@ -67,7 +63,6 @@ const chatFlow = ai.defineFlow(
 
                 if (uid) {
                     const models = xmlrpc.createSecureClient({ host: ODOO_CONFIG.host, port: ODOO_CONFIG.port, path: '/xmlrpc/2/object' });
-                    // Example: Check product count
                     const count = await new Promise((resolve, reject) => {
                         models.methodCall('execute_kw', [
                             ODOO_CONFIG.db, uid, ODOO_CONFIG.password,
@@ -77,31 +72,41 @@ const chatFlow = ai.defineFlow(
                             if (err) reject(err); else resolve(val);
                         });
                     });
-                    contextData = `[DATOS EN TIEMPO REAL]: Conexión exitosa a Odoo. Inventario actual: ${count} productos registrados.`;
+                    const duration = Date.now() - odooStart;
+                    console.log(`[ODOO-SUCCESS] Connected in ${duration}ms. UID: ${uid}. Products: ${count}`);
+                    contextData = `[DATOS REALES]: Inventario Odoo activo con indicación de ${count} productos.`;
                 }
             } catch (error) {
-                console.error('[Odoo Error]', error);
-                contextData = `[ERROR CONEXIÓN]: No pude leer Odoo en este momento (${error.message}).`;
+                console.error('[ODOO-ERROR]', error.message);
+                contextData = `[AVISO]: No pude consultar Odoo (${error.message}).`;
             }
         }
 
-        systemInstructions += `\nUSA ESTA INFORMACIÓN ACTUALIZADA: ${contextData}`;
+        systemInstructions += `\nINFO ADICIONAL: ${contextData}`;
 
-        const response = await ai.generate({
-            model: 'vertexai/gemini-1.5-flash-002',
-            prompt: input.prompt,
-            system: systemInstructions,
-        });
-
-        console.log(`[Genkit] Response generated successfully.`);
-        return response.text;
+        console.log('[AI] Calling Gemini model...');
+        try {
+            const response = await ai.generate({
+                model: 'vertexai/gemini-1.5-flash-002',
+                prompt: input.prompt,
+                system: systemInstructions,
+            });
+            console.log(`[FLOW-END] Success. Duration: ${Date.now() - startTime}ms`);
+            return response.text;
+        } catch (e) {
+            console.error('[AI-FATAL]', e);
+            throw new Error(`Error generando respuesta: ${e.message}`);
+        }
     }
 );
 
-// Start the Genkit server (Express-based)
-// This exposes each flow as a POST endpoint: /chatFlow
+// Global Error Trap
+process.on('uncaughtException', (err) => {
+    console.error('[PROCESS-CRASH] Uncaught Exception:', err);
+});
+
 genkitExpress.startFlowServer({
     flows: [chatFlow],
     port: 8080,
-    cors: { origin: '*' } // Enable CORS for the Dashboard
+    cors: { origin: '*' }
 });
