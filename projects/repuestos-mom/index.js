@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
+const odoo = require('./src/odoo-client');
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -10,7 +11,7 @@ admin.initializeApp();
 app.use(cors());
 app.use(express.json());
 
-// Auth Middleware (Reused from Hub)
+// Auth Middleware
 const verifyToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -26,23 +27,30 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
-// Mock Inventory Data
-const inventory = [
-    { id: 1, name: "Pastillas de Freno", stock: 24, price: 15000 },
-    { id: 2, name: "Filtro de Aceite", stock: 50, price: 8000 },
-    { id: 3, name: "Bujía Premium", stock: 12, price: 4500 }
-];
+// Initialize Odoo once
+let odooInitialized = false;
 
-app.get('/api/parts', verifyToken, (req, res) => {
-    res.json({
-        service: "RepuestosMOM Inventory API",
-        user: req.user.email,
-        items: inventory
-    });
+app.get('/api/parts', verifyToken, async (req, res) => {
+    try {
+        if (!odooInitialized) {
+            await odoo.init();
+            odooInitialized = true;
+        }
+        const products = await odoo.getProducts();
+        res.json({
+            service: "RepuestosMOM Inventory API",
+            user: req.user.email,
+            source: "Odoo ERP Real-time",
+            items: products
+        });
+    } catch (error) {
+        console.error('Odoo Error:', error);
+        res.status(500).json({ error: 'Error fetching data from Odoo', details: error.message });
+    }
 });
 
 app.get('/api', (req, res) => {
-    res.json({ message: "RepuestosMOM API is Online" });
+    res.json({ message: "RepuestosMOM API is Online (Secure & Odoo-ready)" });
 });
 
 app.listen(port, () => {
