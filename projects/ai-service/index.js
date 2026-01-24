@@ -74,20 +74,32 @@ const chatFlow = ai.defineFlow(
                         domain.push(['name', 'ilike', keywords]);
                         console.log(`[ODOO-SEARCH] Searching for: ${keywords}`);
                     } else {
-                        // Default: Top stock items (qty > 0)
-                        domain.push(['qty_available', '>', 0]);
-                        console.log(`[ODOO-SEARCH] Fetching top stock...`);
+                        // Default: Top stock items (qty > 0) is complex with computed fields in XMLRPC search
+                        // So we simplify default behaviour to just fetch recent products for now
+                        console.log(`[ODOO-SEARCH] Fetching recent products...`);
                     }
 
-                    const products = await new Promise((resolve, reject) => {
+                    // Step 1: Search IDs
+                    const productIds = await new Promise((resolve, reject) => {
                         models.methodCall('execute_kw', [
                             ODOO_CONFIG.db, uid, ODOO_CONFIG.password,
-                            'product.product', 'search_read',
+                            'product.product', 'search',
                             [domain],
+                            { limit: 5 }
+                        ], (err, val) => {
+                            if (err) reject(err); else resolve(val);
+                        });
+                    });
+
+                    // Step 2: Read Data (Computed fields like qty_available work here)
+                    const products = await new Promise((resolve, reject) => {
+                        if (productIds.length === 0) return resolve([]);
+                        models.methodCall('execute_kw', [
+                            ODOO_CONFIG.db, uid, ODOO_CONFIG.password,
+                            'product.product', 'read',
+                            [productIds],
                             {
-                                fields: ['name', 'qty_available', 'list_price', 'type'],
-                                limit: 5,
-                                order: 'qty_available desc' // Prioritize high stock
+                                fields: ['name', 'qty_available', 'list_price', 'type']
                             }
                         ], (err, val) => {
                             if (err) reject(err); else resolve(val);
