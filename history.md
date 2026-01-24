@@ -11,10 +11,10 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 
 - **Hito**: Seguridad con Google One Tap & JWT.
 - **Detalle**: Dashboard protegido con Google Identity; API protegida con verificación de tokens Firebase Admin.
+- **Hito**: Arquitectura Firebase Genkit (La Brújula v2).
+- **Detalle**: Migración del microservicio de IA a **Genkit Flows**. Mayor observabilidad, mejores trazas y manejo profesional de prompts.
 - **Hito**: IA Frontier & La Brújula (Gemini 3.0 Pro).
-- **Detalle**: Microservicio `ai-service` actualizado al último modelo disponible: **Gemini 3.0 Pro Preview**. Chat dinámico con contexto de MOM y HUB.
-- **Hito**: Integración Odoo ERP (RepuestosMOM).
-- **Detalle**: Conexión segura mediante XML-RPC y Secret Manager. Inventario en tiempo real activo.
-- **Estado**: Ecosistema de Vanguardia con Gemini 3.0.
+- **Detalle**: Microservicio `ai-service` optimizado para escalabilidad con Firebase Genkit.
+- **Estado**: Ecosistema con Arquitectura de Nivel Empresa.
 
 

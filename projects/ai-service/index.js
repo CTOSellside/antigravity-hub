@@ -1,5 +1,5 @@
 const { genkit, z } = require('genkit');
-const { vertexAI, gemini15Flash } = require('@google-cloud/vertexai');
+const { vertexAI, gemini15Flash } = require('@genkit-ai/vertexai');
 const { startFlowsServer } = require('@genkit-ai/express');
 const admin = require('firebase-admin');
 
