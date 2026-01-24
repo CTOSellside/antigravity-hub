@@ -14,7 +14,7 @@ const project = 'antigravity-cto';
 const location = 'us-central1';
 const vertexAI = new VertexAI({ project: project, location: location });
 const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-2.0-flash-exp',
+    model: 'gemini-1.5-flash-002',
 });
 
 app.use(cors());
@@ -38,28 +38,33 @@ const verifyToken = async (req, res, next) => {
 
 app.post('/api/ai/chat', verifyToken, async (req, res) => {
     const { prompt, context_type } = req.body;
+    console.log(`[AI-START] Prompt from ${req.user.email}: "${prompt}"`);
 
     try {
         let context = "";
         if (context_type === 'MOM') {
-            context = "Eres un experto en inventario de RepuestosMOM. El usuario es Javi, el CTO. ";
+            context = "Eres un experto en inventario de RepuestosMOM. El usuario es Javi, el CTO. Responde de forma ejecutiva y eficiente. ";
             // Here we could add real data from repo-mom
         } else {
-            context = "Eres 'La Brújula', el asistente personal de Javi para gestionar Antigravity. ";
+            context = "Eres 'La Brújula', el asistente personal de Javi para gestionar Antigravity. Analiza tareas y ofrece consejos Scrum. ";
         }
 
         const request = {
             contents: [{ role: 'user', parts: [{ text: `${context} Pregunta del usuario: ${prompt}` }] }],
         };
 
-        const streamingResp = await generativeModel.generateContentStream(request);
-        const response = await streamingResp.response;
-        const text = response.candidates[0].content.parts[0].text;
+        const result = await generativeModel.generateContent(request);
+        const text = result.response.candidates[0].content.parts[0].text;
 
+        console.log(`[AI-SUCCESS] Response sent back to ${req.user.email}`);
         res.json({ response: text });
     } catch (error) {
-        console.error('AI Error:', error);
-        res.status(500).json({ error: 'Error calling AI Engine', details: error.message });
+        console.error('[AI-FAILURE] Full Error:', JSON.stringify(error, null, 2));
+        res.status(500).json({
+            error: 'Error calling AI Engine',
+            details: error.message,
+            advice: "Rosa está revisando los logs en GCP, un momento por favor."
+        });
     }
 });
 
