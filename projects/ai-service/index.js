@@ -87,7 +87,7 @@ const chatFlow = ai.defineFlow(
         console.log('[AI] Calling Gemini model...');
         try {
             const response = await ai.generate({
-                model: 'vertexai/gemini-1.5-flash-002',
+                model: 'gemini-1.5-flash-002',
                 prompt: input.prompt,
                 system: systemInstructions,
             });
