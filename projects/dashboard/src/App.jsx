@@ -3,6 +3,7 @@ import { auth } from './firebase-config'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import OneTapLogin from './OneTapLogin'
 import ProjectCharts from './ProjectCharts'
+import ChatBubble from './ChatBubble'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -85,6 +86,8 @@ function App() {
                 <div className="shimmer-dot"></div>
                 <span>Rosa DevOps AI Agent</span>
             </footer>
+
+            <ChatBubble />
         </div>
     )
 }
