@@ -1,8 +1,11 @@
-// Genkit AI Service v2.2 - Production Ready
+const admin = require('firebase-admin');
 const { genkit, z } = require('genkit');
 const vertexAI = require('@genkit-ai/vertexai');
 const genkitExpress = require('@genkit-ai/express');
-const admin = require('firebase-admin');
+
+console.log('[DEBUG] Genkit Package Keys:', Object.keys(require('genkit')));
+console.log('[DEBUG] VertexAI Package Keys:', Object.keys(vertexAI));
+console.log('[DEBUG] Express Package Keys:', Object.keys(genkitExpress));
 
 // Initialize Firebase Admin for Firebase service context if needed
 admin.initializeApp();
