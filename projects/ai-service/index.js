@@ -127,9 +127,9 @@ const chatFlow = ai.defineFlow(
 
         console.log('[AI] Calling Gemini model...');
         try {
-            // Using Gemini 2.0 Flash (Experimental/Preview) as 1.5 alias seems unstable in this region
+            // Using Gemini 2.5 Pro Preview (Latest available Frontier Model)
             const response = await ai.generate({
-                model: vertexAI.gemini20Flash, // Should resolve to 'vertexai/gemini-2.0-flash-exp' or similar
+                model: vertexAI.gemini25ProPreview0325,
                 prompt: input.prompt,
                 system: systemInstructions,
             });
