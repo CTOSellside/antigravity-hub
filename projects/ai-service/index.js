@@ -149,7 +149,9 @@ const chatFlow = ai.defineFlow(
         name: 'chatFlow',
         inputSchema: z.object({
             prompt: z.string(),
-            context_type: z.string().optional()
+            context_type: z.string().optional(),
+            // History schema: Array of objects with role ('user', 'model', 'tool') and content
+            history: z.array(z.any()).optional()
         }),
         outputSchema: z.string(),
         tools: [searchInventory],
@@ -157,27 +159,33 @@ const chatFlow = ai.defineFlow(
     async (input) => {
         console.log(`[FLOW-START] Prompt: "${input.prompt}"`);
 
-        // System Prompt
+        // System Prompt: Strict Grounding
         let systemInstructions = `Eres 'La Brújula', el asistente experto en logística de RepuestosMOM.
         
-        INSTRUCCIONES:
-        1. Para cualquier consulta sobre inventario, USA la herramienta 'searchInventory'.
-        2. Si la herramienta devuelve resultados, úsalos para responder.
-        3. Si la herramienta no encuentra nada, dilo claramente.
+        REGLAS DE ORO (STRICT GROUNDING):
+        1. Tu única fuente de verdad es la herramienta 'searchInventory'.
+        2. Si la herramienta dice "No products found", TU RESPUESTA DEBE SER: "No encontré información sobre eso en el inventario". NO inventes stock.
+        3. Si no estás seguro de qué busca el usuario, PREGUNTA para aclarar (ej. "¿Te refieres al radiador de agua o de calefacción?").
+        4. Sé conciso y profesional. Muestra precios y cantidades exactas devueltas por la herramienta.
         `;
 
         if (input.context_type !== 'MOM') {
-            systemInstructions += "\n(Si no es sobre inventario, responde como asistente general).";
+            systemInstructions += "\n(Nota: Si la consulta no es sobre inventario, responde como asistente general de proyectos).";
         }
 
         try {
+            // Prepare History
+            // Ensure strict types for Genkit if needed, but z.any() + pass-through usually works for raw objects
+            const history = input.history || [];
+
             // 1. First Generation Call (Model decides to use tool)
             const llmResponse = await ai.generate({
                 model: vertexAI.gemini20Flash,
                 prompt: input.prompt,
                 system: systemInstructions,
-                tools: [searchInventory], // <--- Tools enabled
-                config: { temperature: 0.2 }
+                history: history, // Pass conversation history
+                tools: [searchInventory],
+                config: { temperature: 0.1 } // Very low temp for precision
             });
 
             // 2. Check for Tool Calls
