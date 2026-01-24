@@ -63,18 +63,42 @@ const chatFlow = ai.defineFlow(
 
                 if (uid) {
                     const models = xmlrpc.createSecureClient({ host: ODOO_CONFIG.host, port: ODOO_CONFIG.port, path: '/xmlrpc/2/object' });
-                    const count = await new Promise((resolve, reject) => {
+
+                    // Dynamic Search Logic
+                    let domain = [['type', 'in', ['product', 'consu']]]; // Filter for product and consumable types
+                    // Simple heuristic: if prompt is short and looks like a product name, search for it
+                    const keywords = input.prompt.replace(/hola|stock|tienes|traeme|muestrame|inventario/gi, '').trim();
+
+                    if (keywords.length > 2) {
+                        // Search by name
+                        domain.push(['name', 'ilike', keywords]);
+                        console.log(`[ODOO-SEARCH] Searching for: ${keywords}`);
+                    } else {
+                        // Default: Top stock items (qty > 0)
+                        domain.push(['qty_available', '>', 0]);
+                        console.log(`[ODOO-SEARCH] Fetching top stock...`);
+                    }
+
+                    const products = await new Promise((resolve, reject) => {
                         models.methodCall('execute_kw', [
                             ODOO_CONFIG.db, uid, ODOO_CONFIG.password,
-                            'product.template', 'search_count',
-                            [[['type', '=', 'product']]]
+                            'product.product', 'search_read',
+                            [domain],
+                            {
+                                fields: ['name', 'qty_available', 'list_price', 'type'],
+                                limit: 5,
+                                order: 'qty_available desc' // Prioritize high stock
+                            }
                         ], (err, val) => {
                             if (err) reject(err); else resolve(val);
                         });
                     });
+
                     const duration = Date.now() - odooStart;
-                    console.log(`[ODOO-SUCCESS] Connected in ${duration}ms. UID: ${uid}. Products: ${count}`);
-                    contextData = `[DATOS REALES]: Inventario Odoo activo con indicación de ${count} productos.`;
+                    const inventoryList = products.map(p => `- ${p.name}: ${p.qty_available} unidades ($${p.list_price})`).join('\n');
+
+                    console.log(`[ODOO-SUCCESS] Connected in ${duration}ms. UID: ${uid}. Found ${products.length} items.`);
+                    contextData = `[DATOS REALES DE ODOO]:\n${inventoryList || "No se encontraron productos que coincidan con la búsqueda."}`;
                 }
             } catch (error) {
                 console.error('[ODOO-ERROR]', error.message);
