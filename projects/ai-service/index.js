@@ -1,6 +1,6 @@
 // Genkit AI Service v2.2 - Production Ready
 const { genkit, z } = require('genkit');
-const { vertexAI, gemini15Flash } = require('@genkit-ai/vertexai');
+const vertexAI = require('@genkit-ai/vertexai');
 const { startFlowsServer } = require('@genkit-ai/express');
 const admin = require('firebase-admin');
 
@@ -10,7 +10,7 @@ admin.initializeApp();
 // Configure Genkit with Vertex AI
 const ai = genkit({
     plugins: [
-        vertexAI({
+        vertexAI.vertexAI({
             projectId: 'antigravity-cto',
             location: 'us-central1'
         }),
@@ -41,7 +41,7 @@ const chatFlow = ai.defineFlow(
         }
 
         const response = await ai.generate({
-            model: gemini15Flash,
+            model: vertexAI.gemini15Flash,
             prompt: input.prompt,
             system: systemInstructions,
         });
