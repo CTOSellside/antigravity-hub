@@ -1,3 +1,4 @@
+// Genkit AI Service v2.2 - Production Ready
 const { genkit, z } = require('genkit');
 const { vertexAI, gemini15Flash } = require('@genkit-ai/vertexai');
 const { startFlowsServer } = require('@genkit-ai/express');
