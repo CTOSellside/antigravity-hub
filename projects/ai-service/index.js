@@ -213,6 +213,28 @@ const chatFlow = ai.defineFlow(
                 }
             }
 
+            // 2.5 Fallback: Check for "Hallucinated" Text Tool Calls
+            // Gemini sometimes outputs text like: ```tool_code searchInventory(query='radiador')```
+            const textCallRegex = /searchInventory\s*\(\s*(?:query\s*=\s*)?['"]([^'"]+)['"]\s*\)/i;
+            const match = llmResponse.text.match(textCallRegex);
+
+            if (match) {
+                const capturedQuery = match[1];
+                console.log(`[FLOW-LOOP] Intercepted Text Tool Call: searchInventory('${capturedQuery}')`);
+
+                // Execute Tool manually
+                const toolOutput = await searchInventory({ query: capturedQuery });
+
+                // Feed back to model pretending it was a legitimate tool interaction
+                const finalResponse = await ai.generate({
+                    model: vertexAI.gemini20Flash,
+                    prompt: input.prompt,
+                    system: systemInstructions + `\n\n[SYSTEM UPDATE]: I executed the tool scan you requested. Result: ${toolOutput}. Please summarize this for the user.`,
+                    config: { temperature: 0.2 }
+                });
+                return finalResponse.text;
+            }
+
             // No tool used, just return text
             console.log(`[FLOW-END] Direct response.`);
             return llmResponse.text;
