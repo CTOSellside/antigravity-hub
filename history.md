@@ -11,7 +11,8 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 
 - **Hito**: Seguridad con Google One Tap & JWT.
 - **Detalle**: Dashboard protegido con Google Identity; API protegida con verificación de tokens Firebase Admin.
-- **Optimización**: Implementación de `.dockerignore` y limpieza de repo.
-- **Estado**: Sprint 2 Finalizado con éxito.
+- **Hito**: Dashboard Intelligence (Charts).
+- **Detalle**: Implementación de gráficos `recharts` para visualización de estados y métricas Scrum.
+- **Estado**: Sprint 3 Finalizado.
 
 
