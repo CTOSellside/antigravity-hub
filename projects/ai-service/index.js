@@ -1,7 +1,7 @@
 // Genkit AI Service v2.2 - Production Ready
 const { genkit, z } = require('genkit');
 const vertexAI = require('@genkit-ai/vertexai');
-const { startFlowsServer } = require('@genkit-ai/express');
+const genkitExpress = require('@genkit-ai/express');
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin for Firebase service context if needed
@@ -53,7 +53,7 @@ const chatFlow = ai.defineFlow(
 
 // Start the Genkit server (Express-based)
 // This exposes each flow as a POST endpoint: /chatFlow
-startFlowsServer({
+genkitExpress.startFlowsServer({
     flows: [chatFlow],
     port: 8080,
     cors: { origin: '*' } // Enable CORS for the Dashboard
