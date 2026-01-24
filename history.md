@@ -11,10 +11,10 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 
 - **Hito**: Seguridad con Google One Tap & JWT.
 - **Detalle**: Dashboard protegido con Google Identity; API protegida con verificación de tokens Firebase Admin.
-- **Hito**: IA & La Brújula (Gemini).
-- **Detalle**: Microservicio `ai-service` operativo con Vertex AI (Gemini 1.5 Flash). Chat interactivo en Dashboard para soporte de MOM y gestión HUB.
+- **Hito**: IA Frontier & La Brújula (Gemini 3.0 Pro).
+- **Detalle**: Microservicio `ai-service` actualizado al último modelo disponible: **Gemini 3.0 Pro Preview**. Chat dinámico con contexto de MOM y HUB.
 - **Hito**: Integración Odoo ERP (RepuestosMOM).
 - **Detalle**: Conexión segura mediante XML-RPC y Secret Manager. Inventario en tiempo real activo.
-- **Estado**: Ecosistema Inteligente y Seguro.
+- **Estado**: Ecosistema de Vanguardia con Gemini 3.0.
 
 
