@@ -127,9 +127,10 @@ const chatFlow = ai.defineFlow(
 
         console.log('[AI] Calling Gemini model...');
         try {
-            // Using Gemini 2.5 Pro Preview (Latest available Frontier Model)
+            // Reverting to Gemini 2.0 Flash (STABLE & TESTED)
+            // The previous 2.5 Pro attempt failed with 404 despite listing keys.
             const response = await ai.generate({
-                model: vertexAI.gemini25ProPreview0325,
+                model: vertexAI.gemini20Flash,
                 prompt: input.prompt,
                 system: systemInstructions,
             });
