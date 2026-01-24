@@ -21,23 +21,37 @@ const ChatBubble = () => {
 
         try {
             const token = await auth.currentUser.getIdToken();
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    data: {
-                        prompt: input,
-                        context_type: 'MOM'
-                    }
-                })
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+            const body = JSON.stringify({
+                data: {
+                    prompt: input,
+                    context_type: 'MOM'
+                }
             });
+
+            // Fallback Logic
+            let response;
+            try {
+                // Attempt 1: Direct
+                response = await fetch(API_URL, { method: 'POST', headers, body });
+            } catch (err) {
+                console.log('Direct fetch failed, trying proxy...', err);
+                // Attempt 2: CORS Proxy
+                response = await fetch(`https://corsproxy.io/?${encodeURIComponent(API_URL)}`, {
+                    method: 'POST',
+                    headers,
+                    body
+                });
+            }
+
             const result = await response.json();
             setMessages(prev => [...prev, { role: 'ai', text: result.result }]);
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'ai', text: 'Error de conexión con mis neuronas...' }]);
+            console.error(error);
+            setMessages(prev => [...prev, { role: 'ai', text: 'Error de conexión (ni directo ni proxy)...' }]);
         } finally {
             setLoading(false);
         }
