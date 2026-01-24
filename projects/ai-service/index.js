@@ -44,7 +44,7 @@ const chatFlow = ai.defineFlow(
         }
 
         const response = await ai.generate({
-            model: vertexAI.gemini15Flash,
+            model: 'vertexai/gemini-1.5-flash-002',
             prompt: input.prompt,
             system: systemInstructions,
         });
