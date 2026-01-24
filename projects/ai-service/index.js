@@ -14,7 +14,7 @@ const project = 'antigravity-cto';
 const location = 'us-central1';
 const vertexAI = new VertexAI({ project: project, location: location });
 const generativeModel = vertexAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-2.0-flash-exp',
 });
 
 app.use(cors());
