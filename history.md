@@ -9,10 +9,9 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Razón**: Permite escalabilidad, separación de secretos en GCP y despliegues independientes a Cloud Run.
 - **Estado**: Implementado.
 
-- **Hito**: Sistema Completo y Verificado.
-- **Detalle**: Arquitectura Monorepo con 3 servicios (Frontend, API, Demo) desplegados en Cloud Run.
-- **Seguridad**: Secretos centralizados en Secret Manager.
-- **Datos**: Persistencia en tiempo real con Firestore.
-- **Estado**: Sprint 1 Finalizado con éxito rotundo.
+- **Hito**: Seguridad con Google One Tap & JWT.
+- **Detalle**: Dashboard protegido con Google Identity; API protegida con verificación de tokens Firebase Admin.
+- **Optimización**: Implementación de `.dockerignore` y limpieza de repo.
+- **Estado**: Sprint 2 Finalizado con éxito.
 
 

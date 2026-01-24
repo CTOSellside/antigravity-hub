@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { auth } from './firebase-config'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import OneTapLogin from './OneTapLogin'
+import ProjectCharts from './ProjectCharts'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -60,6 +61,8 @@ function App() {
                 <h1>Project Hub Dashboard</h1>
                 <p>Gestionando el futuro de Antigravity con Javi</p>
             </header>
+
+            {projects.length > 0 && <ProjectCharts projects={projects} />}
 
             <main className="dashboard-grid">
                 {loading ? (

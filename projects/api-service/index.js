@@ -71,6 +71,30 @@ app.post('/api/projects', verifyToken, async (req, res) => {
     }
 });
 
+// GET /api/projects/stats - Summary statistics (Secured)
+app.get('/api/projects/stats', verifyToken, async (req, res) => {
+    try {
+        const snapshot = await projectsCollection.get();
+        const stats = {
+            Planning: 0,
+            'In Progress': 0,
+            Live: 0,
+            total: snapshot.size
+        };
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            if (stats[data.status] !== undefined) {
+                stats[data.status]++;
+            } else {
+                stats[data.status] = (stats[data.status] || 0) + 1;
+            }
+        });
+        res.json(stats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, () => {
     console.log(`API Service listening on port ${port}`);
 });
