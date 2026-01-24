@@ -66,17 +66,22 @@ const chatFlow = ai.defineFlow(
 
                     // Dynamic Search Logic
                     let domain = [['type', 'in', ['product', 'consu']]]; // Filter for product and consumable types
-                    // Simple heuristic: if prompt is short and looks like a product name, search for it
-                    const keywords = input.prompt.replace(/hola|stock|tienes|traeme|muestrame|inventario/gi, '').trim();
 
-                    if (keywords.length > 2) {
+                    // Improved cleaning: remove many common conversational words to isolate the product name
+                    const stopWords = ['hola', 'stock', 'tienes', 'traeme', 'muestrame', 'inventario', 'quiero', 'saber', 'los', 'las', 'dame', 'cuales', 'son', 'productos', 'con', 'mas', 'mayor', 'disponibles', 'hay', 'repuesto', 'para'];
+                    const regex = new RegExp(`\\b(${stopWords.join('|')})\\b`, 'gi');
+                    const keywords = input.prompt.replace(regex, '').replace(/[?¿!¡.,]/g, '').trim();
+
+                    // Heuristic: If keywords are short (likely a product name like "Radiador" or "Bujia"), search by name.
+                    // If keywords are empty or very long/complex, fallback to showing top available stock.
+                    if (keywords.length > 2 && keywords.split(' ').length < 4) {
                         // Search by name
                         domain.push(['name', 'ilike', keywords]);
-                        console.log(`[ODOO-SEARCH] Searching for: ${keywords}`);
+                        console.log(`[ODOO-SEARCH] Searching for specific product: "${keywords}"`);
                     } else {
-                        // Default: Top stock items (qty > 0) is complex with computed fields in XMLRPC search
-                        // So we simplify default behaviour to just fetch recent products for now
-                        console.log(`[ODOO-SEARCH] Fetching recent products...`);
+                        // Default: Top stock items (qty > 0)
+                        domain.push(['qty_available', '>', 0]);
+                        console.log(`[ODOO-SEARCH] Keyword retrieval failed or broad query. Fetching TOP available stock...`);
                     }
 
                     // Step 1: Search IDs
