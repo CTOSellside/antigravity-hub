@@ -9,7 +9,7 @@ const ChatBubble = () => {
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const API_URL = 'https://ai-service-nm65jwwkta-uc.a.run.app/api/ai/chat';
+    const API_URL = 'https://ai-service-nm65jwwkta-uc.a.run.app/chatFlow';
 
     const handleSend = async () => {
         if (!input.trim()) return;
@@ -27,10 +27,15 @@ const ChatBubble = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ prompt: input, context_type: 'MOM' })
+                body: JSON.stringify({
+                    data: {
+                        prompt: input,
+                        context_type: 'MOM'
+                    }
+                })
             });
-            const data = await response.json();
-            setMessages(prev => [...prev, { role: 'ai', text: data.response }]);
+            const result = await response.json();
+            setMessages(prev => [...prev, { role: 'ai', text: result.result }]);
         } catch (error) {
             setMessages(prev => [...prev, { role: 'ai', text: 'Error de conexión con mis neuronas...' }]);
         } finally {
