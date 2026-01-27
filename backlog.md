@@ -15,7 +15,6 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 
 
 ### In Progress
-- [ ] Implementar Autenticación (Firebase Auth o Identity Platform) <!-- id: 57 -->
 
 ### Done
 - [x] Despliegue inicial de `hello-world` <!-- id: 7 -->
@@ -28,6 +27,8 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 - [x] Verificar despliegue en Cloud Run <!-- id: 31 -->
 - [x] Integración de Secret Manager <!-- id: 58 -->
 - [x] Persistencia con Firestore <!-- id: 59 -->
+- [x] Implementar Autenticación (Firebase Auth) <!-- id: 57 -->
+- [x] Securización de `ai-service` (Secret Manager) <!-- id: 64 -->
 
 ### Roadmap (Ideas para Javi)
 - [ ] Conectar el segundo proyecto (RepuestosMOM) al Dashboard <!-- id: 60 -->

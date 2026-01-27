@@ -17,4 +17,11 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Detalle**: Microservicio `ai-service` optimizado para escalabilidad con Firebase Genkit.
 - **Estado**: Ecosistema con Arquitectura de Nivel Empresa.
 
+### 2026-01-27
+- **Hito**: Securización de "La Brújula" (AI Service).
+- **Detalle**: Migración de credenciales de Odoo desde código fuente a **Google Cloud Secret Manager**. Implementación de inicialización asíncrona para asegurar la carga de secretos antes de levantar el servidor de flujos.
+- **Hito**: Consolidación de Autenticación.
+- **Detalle**: Verificación de flujo completo One Tap -> Dashboard -> API (JWT) -> Firestore.
+- **Estado**: Todo el codebase principal es ahora "Production Ready" bajo estándares de seguridad de Antigravity.
+
 

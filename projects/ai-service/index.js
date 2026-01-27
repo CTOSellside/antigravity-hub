@@ -20,15 +20,36 @@ const ai = genkit({
     ],
 });
 
-// Odoo Config
-const ODOO_CONFIG = {
-    url: 'https://www.repuestosmom.cl',
-    host: 'www.repuestosmom.cl',
-    port: 443,
-    db: 'repuestosmom-mom-main-25810633',
-    username: 'cio@repuestosmom.cl',
-    password: '95512ac750d1fad3accc6b498a6490d9ef24f2f3'
-};
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
+const client = new SecretManagerServiceClient();
+
+async function getSecret(name) {
+    try {
+        const [version] = await client.accessSecretVersion({
+            name: `projects/antigravity-cto/secrets/${name}/versions/latest`,
+        });
+        return version.payload.data.toString().trim();
+    } catch (err) {
+        console.error(`[SECRET-ERROR] Error accessing secret ${name}:`, err);
+        throw err;
+    }
+}
+
+// Odoo Config placeholder
+let ODOO_CONFIG = {};
+
+async function initSecrets() {
+    console.log('[INIT] Loading secrets from GCP Secret Manager...');
+    ODOO_CONFIG = {
+        url: await getSecret('SS_ODOO_URL'),
+        host: (new URL(await getSecret('SS_ODOO_URL'))).hostname,
+        port: 443,
+        db: await getSecret('SS_ODOO_DB'),
+        username: await getSecret('SS_ODOO_USER'),
+        password: await getSecret('SS_ODOO_PASSWORD')
+    };
+    console.log('[INIT] Secrets loaded successfully.');
+}
 
 // --- TOOL DEFINITION ---
 
@@ -262,8 +283,19 @@ process.on('uncaughtException', (err) => {
     console.error('[PROCESS-CRASH] Uncaught Exception:', err);
 });
 
-genkitExpress.startFlowServer({
-    flows: [chatFlow],
-    port: 8080,
-    cors: { origin: '*' }
-});
+// START SERVER WRAPPED IN ASYNC FOR SECRETS
+async function start() {
+    try {
+        await initSecrets();
+        genkitExpress.startFlowServer({
+            flows: [chatFlow],
+            port: 8080,
+            cors: { origin: '*' }
+        });
+    } catch (err) {
+        console.error('[FATAL-START] Could not initialize secrets:', err);
+        process.exit(1);
+    }
+}
+
+start();
