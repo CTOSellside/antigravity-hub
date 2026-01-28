@@ -14,6 +14,7 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 ### In Progress
 
 ### Done
+- [x] Métricas Scrum Automáticas (Burndown Chart) <!-- id: 70 -->
 - [x] IA Brújula v2 (Alertas Proactivas en Google Chat) <!-- id: 69 -->
 - [x] Integración Total del Inventario (Odoo Highlights) <!-- id: 68 -->
 - [x] Project Administration 2.0 (CRUD de Proyectos) <!-- id: 67 -->
@@ -36,6 +37,5 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 
 ### Roadmap (Ideas para Javi)
 - [ ] Conectar el segundo proyecto (RepuestosMOM) al Dashboard <!-- id: 60 -->
-- [ ] Añadir Gráficos de progreso (Métrica Scrum) <!-- id: 61 -->
 - [ ] Notificaciones automáticas vía Slack/Email ante fallos de despliegue <!-- id: 62 -->
 - [ ] Crear un servicio de "IA Brújula" que analice los logs <!-- id: 63 -->

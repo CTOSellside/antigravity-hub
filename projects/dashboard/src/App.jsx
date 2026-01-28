@@ -7,6 +7,7 @@ import ChatBubble from './ChatBubble'
 import ProfileMenu from './ProfileMenu'
 import ProjectModal from './ProjectModal'
 import InventoryHighlights from './InventoryHighlights'
+import ScrumMetrics from './ScrumMetrics'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -14,6 +15,7 @@ function App() {
     const [profiles, setProfiles] = useState([])
     const [activeProfile, setActiveProfile] = useState(null)
     const [inventory, setInventory] = useState([])
+    const [scrumData, setScrumData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [invLoading, setInvLoading] = useState(false)
     const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -66,6 +68,7 @@ function App() {
             })
             const data = await response.json()
             setProjects(data)
+            fetchScrumMetrics(authToken)
 
             // Fetch inventory if Repuestos MOM
             const profile = profiles.find(p => p.id === profileId) || activeProfile
@@ -96,6 +99,21 @@ function App() {
             console.error('Error fetching inventory:', err)
         } finally {
             setInvLoading(false)
+        }
+    }
+
+    const fetchScrumMetrics = async (token) => {
+        try {
+            const authToken = token || await auth.currentUser.getIdToken()
+            const response = await fetch(`${BASE_URL}/scrum/metrics`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setScrumData(data)
+            }
+        } catch (err) {
+            console.error('Error fetching scrum metrics:', err)
         }
     }
 
@@ -220,6 +238,14 @@ function App() {
             )}
 
             <InventoryHighlights products={inventory} loading={invLoading} />
+
+            {scrumData && (
+                <ScrumMetrics
+                    data={scrumData.burndown}
+                    velocity={scrumData.velocity}
+                    totalScope={scrumData.totalScope}
+                />
+            )}
 
             {projects.length > 0 && <ProjectCharts projects={projects} />}
 

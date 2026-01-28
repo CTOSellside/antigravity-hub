@@ -73,6 +73,7 @@ app.use(express.json());
 // Initialize Firestore
 const projectsCollection = firestore.collection('projects');
 const profilesCollection = firestore.collection('profiles');
+const scrumMetricsCollection = firestore.collection('scrum_metrics');
 
 // Seeding Initial Profiles & Migration
 const seedProfiles = async () => {
@@ -111,6 +112,23 @@ const seedProfiles = async () => {
         console.log(`[MIGRATION] Successfully migrated ${migratedCount} projects to profile ${defaultProfileId} (CTO Sellside).`);
     } else {
         console.log('[MIGRATION] No orphan projects found.');
+    }
+
+    // Seed Scrum Metrics if empty
+    const metricsSnapshot = await scrumMetricsCollection.get();
+    if (metricsSnapshot.empty) {
+        console.log('[SEED] Seeding historical scrum metrics...');
+        const today = new Date();
+        const baseScope = 25; // Simulated scope
+        const historicalEvents = [
+            { type: 'COMPLETED', date: new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000).toISOString(), count: 2 },
+            { type: 'COMPLETED', date: new Date(today.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(), count: 3 },
+            { type: 'COMPLETED', date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), count: 4 },
+            { type: 'COMPLETED', date: new Date(today.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(), count: 2 }
+        ];
+        for (const event of historicalEvents) {
+            await scrumMetricsCollection.add(event);
+        }
     }
 };
 
@@ -236,6 +254,17 @@ app.patch('/api/projects/:id', verifyToken, async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
+
+        // Log Scrum Event if status changes to 'Live'
+        if (updates.status === 'Live') {
+            await scrumMetricsCollection.add({
+                type: 'COMPLETED',
+                projectId: id,
+                date: new Date().toISOString(),
+                count: 1
+            });
+        }
+
         await projectsCollection.doc(id).update({
             ...updates,
             updatedAt: new Date().toISOString()
@@ -311,6 +340,46 @@ app.get('/api/cron/check-stock', async (req, res) => {
         });
     } catch (error) {
         console.error('[CRON-ERROR]', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/scrum/metrics - Get Burndown data (Secured)
+app.get('/api/scrum/metrics', verifyToken, async (req, res) => {
+    try {
+        const eventsSnapshot = await scrumMetricsCollection.orderBy('date', 'asc').get();
+        const events = eventsSnapshot.docs.map(doc => doc.data());
+
+        const totalScope = 25; // Fixed scope for visualization
+        const data = [];
+        const today = new Date();
+        let remaining = totalScope;
+
+        // Generate metrics for last 8 days (inclusive)
+        for (let i = 7; i >= 0; i--) {
+            const date = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+            const dateStr = date.toISOString().split('T')[0];
+
+            const completedOnDay = events
+                .filter(e => e.date.startsWith(dateStr))
+                .reduce((sum, e) => sum + (e.count || 1), 0);
+
+            remaining -= completedOnDay;
+            const ideal = Math.max(0, totalScope - (totalScope / 7) * (7 - i));
+
+            data.push({
+                day: dateStr.split('-').slice(1).join('/'), // format MM/DD
+                actual: Math.max(0, remaining),
+                ideal: parseFloat(ideal.toFixed(1))
+            });
+        }
+
+        res.json({
+            burndown: data,
+            velocity: (events.length > 0 ? (totalScope - remaining) / 7 : 0).toFixed(1),
+            totalScope
+        });
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
