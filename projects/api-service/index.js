@@ -73,6 +73,61 @@ const getOdooData = async () => {
     });
 };
 
+// --- SCAFFOLDING HELPERS ---
+
+const slugify = (text) => {
+    return text.toString().toLowerCase().trim()
+        .replace(/\s+/g, '-')           // Replace spaces with -
+        .replace(/[^\w-]+/g, '')       // Remove all non-word chars
+        .replace(/--+/g, '-');          // Replace multiple - with single -
+}
+
+const createGitHubRepo = async (name, description) => {
+    try {
+        const token = await getSecret('hello-world-github-oauthtoken-3dfaea');
+        if (!token) throw new Error('GitHub Token not found in Secret Manager');
+
+        const repoName = slugify(name);
+        console.log(`[GH-SCAFFOLD] Creating repo: ${repoName}`);
+
+        const response = await axios.post('https://api.github.com/user/repos', {
+            name: repoName,
+            description: description || "Project scaffolded by Antigravity Hub",
+            private: true,
+            auto_init: true // Ensure repo exists with a README
+        }, {
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'Antigravity-Hub'
+            }
+        });
+
+        return response.data;
+    } catch (error) {
+        console.error('[GH-SCAFFOLD-ERROR]', error.response?.data || error.message);
+        throw error;
+    }
+}
+
+const initializeProjectEntry = async (name, repoUrl) => {
+    try {
+        console.log(`[FIRESTORE-SCAFFOLD] Registering project: ${name}`);
+        const docRef = await projectsCollection.add({
+            name: name,
+            repoUrl: repoUrl,
+            status: 'Active',
+            category: 'Scaffolded',
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString()
+        });
+        return docRef.id;
+    } catch (error) {
+        console.error('[FIRESTORE-PROJECT-INIT-ERROR]', error);
+        throw error;
+    }
+}
+
 // Initialize Firebase Admin (uses default credentials in GCP)
 admin.initializeApp();
 app.use(cors());
@@ -553,8 +608,30 @@ app.post('/api/backlog/:id/execute', verifyToken, async (req, res) => {
         // Logic for specialized tasks
         let executionResult = "Protocolo de reconocimiento completado. Procediendo con la ejecución técnica...";
 
-        if (task.title.toLowerCase().includes('scaffold') || task.title.toLowerCase().includes('crear proyecto')) {
-            executionResult = "Scaffolding 3.0 activado. Verificando repositorio y generando estructura base...";
+        if (task.title.toLowerCase().includes('scaffold') || task.title.toLowerCase().includes('crear proyecto') || task.title.toLowerCase().includes('vincular')) {
+            try {
+                executionResult = "🚀 Scaffolding 3.0 activado. Generando infraestructura real...";
+
+                // 1. Create GitHub Repo
+                const ghRepo = await createGitHubRepo(task.title, finalInstructions);
+                const repoUrl = ghRepo.html_url;
+                const repoSsh = ghRepo.ssh_url;
+
+                // 2. Initialize Firestore Entry
+                await initializeProjectEntry(task.title, repoUrl);
+
+                executionResult = `✅ Infraestructura Creada: ${repoUrl}`;
+
+                // Notify Google Chat with extra details
+                if (webhookUrl) {
+                    await axios.post(webhookUrl, {
+                        text: `✨ *Scaffolding Completado con Éxito*\n\nJavi, he creado el repositorio: **${task.title}**\n🔗 *GitHub:* ${repoUrl}\n\n🛠️ *Pasos sugeridos:* \n\`\`\`bash\ngit remote add origin ${repoSsh}\ngit push -u origin main\n\`\`\`\n\nEl proyecto ha sido registrado automáticamente en tu Dashboard. 🦾🛡️`
+                    });
+                }
+            } catch (scaffoldError) {
+                console.error('[SCAFFOLD-LOGIC-ERROR]', scaffoldError);
+                executionResult = `❌ Error en Scaffolding: ${scaffoldError.message}`;
+            }
         }
 
         await backlogCollection.doc(id).update({
