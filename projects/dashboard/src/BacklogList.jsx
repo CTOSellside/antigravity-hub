@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, Circle, Clock, Tag } from 'lucide-react';
+import { CheckCircle2, Circle, Clock, Tag, Zap, Play, Loader2 } from 'lucide-react';
 
 const BacklogList = ({ apiBaseUrl, auth }) => {
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [executingId, setExecutingId] = useState(null);
+    const [instructions, setInstructions] = useState({});
 
     const fetchBacklog = async () => {
         try {
@@ -42,6 +44,33 @@ const BacklogList = ({ apiBaseUrl, auth }) => {
         }
     };
 
+    const executeTask = async (e, task) => {
+        e.stopPropagation();
+        setExecutingId(task.id);
+        try {
+            const token = await auth.currentUser.getIdToken();
+            const response = await fetch(`${apiBaseUrl}/backlog/${task.id}/execute`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ instructions: instructions[task.id] || '' })
+            });
+            const result = await response.json();
+            alert(`Rosa: ${result.result}`);
+            fetchBacklog();
+        } catch (error) {
+            console.error('Error executing task:', error);
+        } finally {
+            setExecutingId(null);
+        }
+    };
+
+    const handleInstructionChange = (id, val) => {
+        setInstructions(prev => ({ ...prev, [id]: val }));
+    };
+
     if (loading) return <div className="loading-shimmer">Cargando Backlog...</div>;
 
     return (
@@ -63,7 +92,7 @@ const BacklogList = ({ apiBaseUrl, auth }) => {
                         {tasks.map((task) => (
                             <div
                                 key={task.id}
-                                className={`backlog-item ${task.status === 'Done' ? 'task-done' : ''}`}
+                                className={`backlog-item ${task.status === 'Done' ? 'task-done' : ''} ${task.status === 'In Progress' ? 'task-active' : ''}`}
                                 onClick={() => toggleTask(task)}
                             >
                                 <div className="task-status-icon">
@@ -85,10 +114,32 @@ const BacklogList = ({ apiBaseUrl, auth }) => {
                                             </span>
                                         )}
                                     </div>
+                                    {task.status !== 'Done' && (
+                                        <div className="task-instructions" onClick={e => e.stopPropagation()}>
+                                            <input
+                                                type="text"
+                                                placeholder="Instrucciones para Rosa..."
+                                                value={instructions[task.id] || task.instructions || ''}
+                                                onChange={e => handleInstructionChange(task.id, e.target.value)}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
-                                <div className="task-date">
-                                    <Clock size={12} />
-                                    <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                                <div className="task-actions">
+                                    {task.status === 'To Do' && (
+                                        <button
+                                            className="execute-btn"
+                                            disabled={executingId === task.id}
+                                            onClick={(e) => executeTask(e, task)}
+                                        >
+                                            {executingId === task.id ? <Loader2 className="spin" size={16} /> : <Zap size={16} />}
+                                            <span>Ejecutar</span>
+                                        </button>
+                                    )}
+                                    <div className="task-date">
+                                        <Clock size={12} />
+                                        <span>{new Date(task.createdAt).toLocaleDateString()}</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}

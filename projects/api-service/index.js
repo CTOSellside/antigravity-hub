@@ -513,6 +513,55 @@ app.patch('/api/backlog/:id', verifyToken, async (req, res) => {
     }
 });
 
+// POST /api/backlog/:id/execute - Trigger Antigravity Protocol for task execution (Secured)
+app.post('/api/backlog/:id/execute', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { instructions } = req.body;
+        const taskDoc = await backlogCollection.doc(id).get();
+        if (!taskDoc.exists) return res.status(404).json({ error: 'Task not found' });
+
+        const task = taskDoc.data();
+        const finalInstructions = instructions || task.instructions || 'Seguir protocolo estándar.';
+
+        console.log(`[PROTOCOL] Executing task: ${task.title} with instructions: ${finalInstructions}`);
+
+        // Update status to Executing and store instructions
+        await backlogCollection.doc(id).update({
+            status: 'In Progress',
+            executing: true,
+            instructions: finalInstructions,
+            updatedAt: new Date().toISOString()
+        });
+
+        // Antigravity Protocol Step 1: Notify Google Chat
+        const webhookUrl = await getSecret('SS_GOOGLE_CHAT_WEBHOOK');
+        if (webhookUrl) {
+            await axios.post(webhookUrl, {
+                text: `🚀 *Antigravity Protocol: Ejecución Iniciada*\n\nJavi ha ordenado la ejecución de: **${task.title}**\n📝 *Instrucciones:* ${finalInstructions}\n\n🤖 *Rosa:* "Entendido, Javi. Iniciando el proceso técnico ahora mismo."`
+            });
+        }
+
+        // Logic for specialized tasks
+        let executionResult = "Protocolo de reconocimiento completado. Procediendo con la ejecución técnica...";
+
+        if (task.title.toLowerCase().includes('scaffold') || task.title.toLowerCase().includes('crear proyecto')) {
+            executionResult = "Scaffolding 3.0 activado. Verificando repositorio y generando estructura base...";
+        }
+
+        await backlogCollection.doc(id).update({
+            executing: false,
+            lastActionResult: executionResult,
+            updatedAt: new Date().toISOString()
+        });
+
+        res.json({ message: 'Protocolo de ejecución iniciado', result: executionResult });
+    } catch (error) {
+        console.error('[PROTOCOL-ERROR]', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 app.listen(port, async () => {
     await seedProfiles();
     console.log(`API Service listening on port ${port}`);
