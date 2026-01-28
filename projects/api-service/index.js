@@ -4,7 +4,6 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const { Firestore } = require('@google-cloud/firestore');
 const xmlrpc = require('xmlrpc');
-const axios = require('axios');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const app = express();
 const port = process.env.PORT || 8080;
