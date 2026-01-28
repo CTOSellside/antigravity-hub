@@ -8,6 +8,7 @@ import ProfileMenu from './ProfileMenu'
 import ProjectModal from './ProjectModal'
 import InventoryHighlights from './InventoryHighlights'
 import ScrumMetrics from './ScrumMetrics'
+import BacklogList from './BacklogList'
 import logoHub from './assets/logo-hub.png'
 import logoBrujula from './assets/logo-brujula.png'
 
@@ -243,11 +244,17 @@ function App() {
             <InventoryHighlights products={inventory} loading={invLoading} />
 
             {scrumData && (
-                <ScrumMetrics
-                    data={scrumData.burndown}
-                    velocity={scrumData.velocity}
-                    totalScope={scrumData.totalScope}
-                />
+                <>
+                    <ScrumMetrics
+                        data={scrumData.burndown}
+                        velocity={scrumData.velocity}
+                        totalScope={scrumData.totalScope}
+                    />
+                    <BacklogList
+                        apiBaseUrl={API_BASE_URL}
+                        auth={auth}
+                    />
+                </>
             )}
 
             {projects.length > 0 && <ProjectCharts projects={projects} />}

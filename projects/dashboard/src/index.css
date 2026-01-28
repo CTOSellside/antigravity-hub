@@ -595,6 +595,120 @@ body {
   animation: revealUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
+/* Backlog Section Styles */
+.backlog-section {
+  margin-top: 3rem;
+  padding: 2.5rem !important;
+  animation: revealUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+.backlog-section h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+
+.task-count-badge {
+  background: var(--accent-glow);
+  color: var(--accent);
+  padding: 0.3rem 0.8rem;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid var(--glass-border);
+}
+
+.backlog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.backlog-item {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  padding: 1.2rem 1.5rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.backlog-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(8px);
+  border-color: var(--accent);
+}
+
+.task-done {
+  opacity: 0.5;
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.task-done .task-title {
+  text-decoration: line-through;
+  color: var(--text-dim);
+}
+
+.task-content {
+  flex: 1;
+}
+
+.task-title {
+  margin: 0 0 0.4rem 0;
+  font-weight: 500;
+  font-size: 1.05rem;
+}
+
+.task-meta {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.status-tag {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim);
+}
+
+.status-tag.in-progress {
+  background: rgba(56, 189, 248, 0.1);
+  color: #38bdf8;
+}
+
+.category-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.task-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.loading-shimmer {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-dim);
+  animation: pulse 1.5s infinite;
+}
+
 .project-card {
   background: var(--glass);
   backdrop-filter: blur(20px) saturate(180%);
