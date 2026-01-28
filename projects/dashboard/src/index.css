@@ -785,6 +785,25 @@ body {
   transform: scale(1.1);
 }
 
+.chat-icon-img {
+  width: 35px;
+  height: 35px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px var(--accent));
+}
+
+.chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.chat-mini-logo {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 .chat-window {
   position: absolute;
   bottom: 80px;

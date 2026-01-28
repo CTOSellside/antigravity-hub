@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { auth } from './firebase-config';
+import logoBrujula from './assets/logo-brujula.png';
 
 const ChatBubble = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -68,13 +69,16 @@ const ChatBubble = () => {
     return (
         <div className={`chat-wrapper ${isOpen ? 'open' : ''}`}>
             <button className="chat-trigger" onClick={() => setIsOpen(!isOpen)}>
-                {isOpen ? '✕' : '💬'}
+                {isOpen ? '✕' : <img src={logoBrujula} alt="La Brújula" className="chat-icon-img" />}
             </button>
 
             {isOpen && (
                 <div className="chat-window shadow-xl">
                     <div className="chat-header">
-                        <h4>La Brújula AI</h4>
+                        <div className="chat-header-info">
+                            <img src={logoBrujula} alt="" className="chat-mini-logo" />
+                            <h4>La Brújula AI</h4>
+                        </div>
                         <span>Online</span>
                     </div>
                     <div className="chat-messages">
