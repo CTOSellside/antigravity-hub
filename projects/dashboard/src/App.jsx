@@ -8,6 +8,8 @@ import ProfileMenu from './ProfileMenu'
 import ProjectModal from './ProjectModal'
 import InventoryHighlights from './InventoryHighlights'
 import ScrumMetrics from './ScrumMetrics'
+import logoHub from './assets/logo-hub.png'
+import logoBrujula from './assets/logo-brujula.png'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -193,6 +195,7 @@ function App() {
     return (
         <div className="container" style={{ '--profile-color': activeProfile?.color || '#38bdf8' }}>
             <header className="header">
+                <img src={logoHub} alt="Antigravity Hub" className="header-logo" />
                 <div className="header-top">
                     <div className="user-info">
                         {user && (
@@ -214,8 +217,8 @@ function App() {
                         </button>
                     )}
                 </div>
-                <h1>Project Hub Dashboard</h1>
-                <p>Gestionando el futuro de Antigravity en el entorno <strong>{activeProfile?.name}</strong></p>
+                <h1>Antigravity Hub</h1>
+                <p>Navegando hacia el futuro en el entorno <span className="highlight" style={{ color: activeProfile?.color }}>{activeProfile?.name}</span></p>
             </header>
 
             {showProfileMenu && (
