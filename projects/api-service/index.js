@@ -132,10 +132,24 @@ const seedProfiles = async () => {
         }
     }
 
-    // Seed Backlog if empty (Preparation for sync)
+    // Seed Backlog if empty
     const backlogSnapshot = await backlogCollection.limit(1).get();
     if (backlogSnapshot.empty) {
-        console.log('[SEED] Backlog empty. Ready for initial sync.');
+        console.log('[SEED] Seeding initial backlog tasks...');
+        const initialTasks = [
+            { title: 'Configurar primer proyecto específico', status: 'To Do', category: 'To Do', createdAt: new Date().toISOString() },
+            { title: 'Vincular con GitHub Repository', status: 'To Do', category: 'To Do', createdAt: new Date().toISOString() },
+            { title: 'Project Scaffolding 3.0 (Auto-generación de Código)', status: 'Done', category: 'Done', createdAt: new Date().toISOString() },
+            { title: 'Métricas Scrum Automáticas (Burndown Chart)', status: 'Done', category: 'Done', createdAt: new Date().toISOString() },
+            { title: 'IA Brújula v2 (Alertas Proactivas en Google Chat)', status: 'Done', category: 'Done', createdAt: new Date().toISOString() }
+        ];
+        const batch = firestore.batch();
+        initialTasks.forEach(task => {
+            const docRef = backlogCollection.doc();
+            batch.set(docRef, task);
+        });
+        await batch.commit();
+        console.log('[SEED] Backlog seeded successfully.');
     }
 };
 
