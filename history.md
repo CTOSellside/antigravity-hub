@@ -20,6 +20,7 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 ### 2026-01-27
 - **Hito**: Sistema Multi-perfil Dinámico.
 - **Detalle**: Implementación de una arquitectura de "Entornos" que permite al Dashboard cambiar entre diferentes proyectos de GCP (CTO Sellside vs RepuestosMOM) dinámicamente. 
+- **Resolución**: Se corrigieron errores de despliegue y configuración de OAuth (`origin_mismatch`).
 - **Componentes**: Nueva colección de `profiles` en Firestore, API de gestión de entornos y componente `ProfileSwitcher` en el frontend.
 - **Hito**: Securización de "La Brújula" (AI Service).
 - **Detalle**: Migración de credenciales de Odoo a **Secret Manager**. Implementación de inicialización asíncrona.
