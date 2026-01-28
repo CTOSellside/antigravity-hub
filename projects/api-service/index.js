@@ -74,6 +74,7 @@ app.use(express.json());
 const projectsCollection = firestore.collection('projects');
 const profilesCollection = firestore.collection('profiles');
 const scrumMetricsCollection = firestore.collection('scrum_metrics');
+const backlogCollection = firestore.collection('backlog');
 
 // Seeding Initial Profiles & Migration
 const seedProfiles = async () => {
@@ -129,6 +130,12 @@ const seedProfiles = async () => {
         for (const event of historicalEvents) {
             await scrumMetricsCollection.add(event);
         }
+    }
+
+    // Seed Backlog if empty (Preparation for sync)
+    const backlogSnapshot = await backlogCollection.limit(1).get();
+    if (backlogSnapshot.empty) {
+        console.log('[SEED] Backlog empty. Ready for initial sync.');
     }
 };
 
@@ -439,6 +446,54 @@ app.get('/api/scrum/metrics', verifyToken, async (req, res) => {
             velocity: (events.length > 0 ? (totalScope - remaining) / 7 : 0).toFixed(1),
             totalScope
         });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/backlog - List all backlog tasks (Secured)
+app.get('/api/backlog', verifyToken, async (req, res) => {
+    try {
+        const snapshot = await backlogCollection.orderBy('createdAt', 'desc').get();
+        const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.json(tasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// POST /api/backlog/sync - Sync markdown tasks to Firestore (Secured)
+app.post('/api/backlog/sync', verifyToken, async (req, res) => {
+    try {
+        const { tasks } = req.body;
+        if (!tasks || !Array.isArray(tasks)) return res.status(400).json({ error: 'Tasks array required' });
+
+        const batch = firestore.batch();
+        tasks.forEach(task => {
+            const docRef = backlogCollection.doc();
+            batch.set(docRef, {
+                ...task,
+                createdAt: new Date().toISOString(),
+                syncedFrom: 'markdown'
+            });
+        });
+        await batch.commit();
+        res.json({ message: `Successfully synced ${tasks.length} tasks.` });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PATCH /api/backlog/:id - Update task status (Secured)
+app.patch('/api/backlog/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        await backlogCollection.doc(id).update({
+            ...updates,
+            updatedAt: new Date().toISOString()
+        });
+        res.json({ id, ...updates, message: 'Task updated successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
