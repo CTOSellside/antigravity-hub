@@ -8,7 +8,7 @@ const BacklogList = ({ apiBaseUrl, auth }) => {
     const fetchBacklog = async () => {
         try {
             const token = await auth.currentUser.getIdToken();
-            const response = await fetch(`${apiBaseUrl}/api/backlog`, {
+            const response = await fetch(`${apiBaseUrl}/backlog`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             const data = await response.json();
@@ -28,7 +28,7 @@ const BacklogList = ({ apiBaseUrl, auth }) => {
         const newStatus = task.status === 'Done' ? 'To Do' : 'Done';
         try {
             const token = await auth.currentUser.getIdToken();
-            await fetch(`${apiBaseUrl}/api/backlog/${task.id}`, {
+            await fetch(`${apiBaseUrl}/backlog/${task.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
