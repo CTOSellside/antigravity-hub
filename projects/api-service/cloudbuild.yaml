@@ -22,7 +22,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
-      - '--set-secrets=SS_TEST_SECRET=SS_TEST_SECRET:latest'
+      - '--set-secrets=SS_TEST_SECRET=SS_TEST_SECRET:latest,SS_GOOGLE_CHAT_WEBHOOK=SS_GOOGLE_CHAT_WEBHOOK:latest,SS_ODOO_URL=SS_ODOO_URL:latest,SS_ODOO_DB=SS_ODOO_DB:latest,SS_ODOO_USER=SS_ODOO_USER:latest,SS_ODOO_PASSWORD=SS_ODOO_PASSWORD:latest,GITHUB_TOKEN=hello-world-github-oauthtoken-3dfaea:latest'
 
 
 images:
