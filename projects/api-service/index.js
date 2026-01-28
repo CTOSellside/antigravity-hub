@@ -4,6 +4,7 @@ const cors = require('cors');
 const admin = require('firebase-admin');
 const { Firestore } = require('@google-cloud/firestore');
 const xmlrpc = require('xmlrpc');
+const axios = require('axios');
 const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const app = express();
 const port = process.env.PORT || 8080;
@@ -202,7 +203,7 @@ app.get('/api/projects', verifyToken, async (req, res) => {
 // POST /api/projects - Add a new project (Secured)
 app.post('/api/projects', verifyToken, async (req, res) => {
     try {
-        const { name, owner, status, profileId } = req.body;
+        const { name, owner, status, profileId, scaffold } = req.body;
         if (!profileId) return res.status(400).json({ error: 'profileId is required' });
 
         const newProject = {
@@ -213,6 +214,66 @@ app.post('/api/projects', verifyToken, async (req, res) => {
             createdAt: new Date().toISOString(),
             createdBy: req.user.email
         };
+
+        if (scaffold) {
+            console.log(`[SCAFFOLD] Triggering automatic scaffolding for: ${name}`);
+            try {
+                const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                const githubToken = await getSecret('hello-world-github-oauthtoken-3dfaea');
+                const repo = 'CTOSellside/antigravity-hub';
+                const branch = 'main';
+
+                const files = [
+                    {
+                        path: `projects/${slug}/package.json`,
+                        content: JSON.stringify({
+                            name: slug,
+                            version: "1.0.0",
+                            description: `Auto-generated project: ${name}`,
+                            main: "index.js",
+                            scripts: { start: "node index.js" },
+                            dependencies: { express: "^4.18.2" }
+                        }, null, 2)
+                    },
+                    {
+                        path: `projects/${slug}/index.js`,
+                        content: `const express = require('express');\nconst app = express();\nconst port = process.env.PORT || 8080;\n\napp.get('/', (req, res) => {\n    res.json({ message: 'Hello from ${name}!', status: 'Scaffolded successfully' });\n});\n\napp.listen(port, () => {\n    console.log('${name} listening on port ' + port);\n});`
+                    },
+                    {
+                        path: `projects/${slug}/Dockerfile`,
+                        content: "FROM node:18-slim\nWORKDIR /usr/src/app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 8080\nCMD [ \"node\", \"index.js\" ]"
+                    },
+                    {
+                        path: `projects/${slug}/cloudbuild.yaml`,
+                        content: `steps:\n  - name: 'gcr.io/cloud-builders/docker'\n    args: ['build', '-t', 'gcr.io/$PROJECT_ID/${slug}', '.']\n  - name: 'gcr.io/cloud-builders/docker'\n    args: ['push', 'gcr.io/$PROJECT_ID/${slug}']\n  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'\n    entrypoint: gcloud\n    args:\n      - 'run'\n      - 'deploy'\n      - '${slug}'\n      - '--image'\n      - 'gcr.io/$PROJECT_ID/${slug}'\n      - '--region'\n      - 'us-central1'\n      - '--platform'\n      - 'managed'\n      - '--allow-unauthenticated'\nimages:\n  - 'gcr.io/$PROJECT_ID/${slug}'`
+                    }
+                ];
+
+                for (const file of files) {
+                    await axios.put(
+                        `https://api.github.com/repos/${repo}/contents/${file.path}`,
+                        {
+                            message: `feat: scaffold project ${name}`,
+                            content: Buffer.from(file.content).toString('base64'),
+                            branch: branch
+                        },
+                        {
+                            headers: {
+                                Authorization: `token ${githubToken}`,
+                                Accept: 'application/vnd.github.v3+json'
+                            }
+                        }
+                    );
+                }
+                newProject.githubUrl = `https://github.com/CTOSellside/antigravity-hub/tree/main/projects/${slug}`;
+                newProject.scaffolded = true;
+            } catch (scaffoldError) {
+                console.error('[SCAFFOLD-ERROR]', scaffoldError.response?.data || scaffoldError.message);
+                // We still save the project but mark it as failed scaffolding
+                newProject.scaffoldError = scaffoldError.message;
+            }
+        }
+
         const docRef = await projectsCollection.add(newProject);
         res.status(201).json({ id: docRef.id, ...newProject });
     } catch (error) {

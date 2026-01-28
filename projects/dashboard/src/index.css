@@ -859,3 +859,39 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Scaffolding Toggle Styles */
+.checkbox-group {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 0.8rem !important;
+  margin-top: 0.5rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.checkbox-label {
+  display: flex !important;
+  align-items: center;
+  gap: 0.8rem;
+  cursor: pointer;
+  color: white !important;
+  font-weight: 600 !important;
+  margin-bottom: 0 !important;
+}
+
+.checkbox-label input {
+  width: 18px !important;
+  height: 18px !important;
+  cursor: pointer;
+}
+
+.helper-text {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 0.3rem;
+  padding-left: 2.3rem;
+}

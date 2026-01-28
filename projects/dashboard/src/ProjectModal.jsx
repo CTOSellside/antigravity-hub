@@ -67,6 +67,20 @@ const ProjectModal = ({ project, profileId, onSave, onClose }) => {
                         />
                     </div>
 
+                    {!project && (
+                        <div className="form-group checkbox-group">
+                            <label className="checkbox-label">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.scaffold || false}
+                                    onChange={(e) => setFormData({ ...formData, scaffold: e.target.checked })}
+                                />
+                                <span>🚀 Scaffolding Automático (Generar Código)</span>
+                            </label>
+                            <p className="helper-text">Esto creará el esqueleto del proyecto en GitHub.</p>
+                        </div>
+                    )}
+
                     <div className="form-actions">
                         <button type="button" className="secondary-btn" onClick={onClose}>Cancelar</button>
                         <button type="submit" className="primary-btn">
