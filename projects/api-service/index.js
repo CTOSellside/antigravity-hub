@@ -50,15 +50,23 @@ const getOdooData = async () => {
 
     return new Promise((resolve, reject) => {
         common.methodCall('authenticate', [odooConfig.db, odooConfig.user, odooConfig.pass, {}], (err, uid) => {
-            if (err || !uid) return reject(err || new Error('Auth failed'));
+            if (err || !uid) {
+                console.error('[ODOO-AUTH-FAILED]', err || 'No UID returned');
+                return reject(err || new Error('Auth failed'));
+            }
+            console.log(`[ODOO-AUTH-SUCCESS] UID: ${uid}`);
 
             object.methodCall('execute_kw', [
                 odooConfig.db, uid, odooConfig.pass,
-                'product.template', 'search_read',
-                [[['type', '=', 'product'], ['qty_available', '>', 0]]],
-                { fields: ['name', 'list_price', 'qty_available'], limit: 6, order: 'qty_available desc' }
+                'product.product', 'search_read',
+                [[['type', 'in', ['product', 'consu']], ['qty_available', '>', 0]]],
+                { fields: ['name', 'list_price', 'qty_available'], limit: 8, order: 'qty_available desc' }
             ], (err, products) => {
-                if (err) return reject(err);
+                if (err) {
+                    console.error('[ODOO-EXECUTE-FAILED]', err);
+                    return reject(err);
+                }
+                console.log(`[ODOO-DATA-FETCHED] Count: ${products.length}`);
                 resolve(products);
             });
         });
@@ -397,8 +405,8 @@ app.get('/api/cron/check-stock', async (req, res) => {
 
             object.methodCall('execute_kw', [
                 odooConfig.db, uid, odooConfig.pass,
-                'product.template', 'search_read',
-                [[['type', '=', 'product'], ['qty_available', '<', 5], ['qty_available', '>', 0]]],
+                'product.product', 'search_read',
+                [[['type', 'in', ['product', 'consu']], ['qty_available', '<', 5], ['qty_available', '>', 0]]],
                 { fields: ['name', 'qty_available'], limit: 10 }
             ], async (err, lowStockProducts) => {
                 if (err) return res.status(500).json({ error: 'Odoo search failed' });
