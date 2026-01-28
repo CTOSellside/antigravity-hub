@@ -16,9 +16,11 @@ const firestore = new Firestore();
 const projectsCollection = firestore.collection('projects');
 const profilesCollection = firestore.collection('profiles');
 
-// Seeding Initial Profiles
+// Seeding Initial Profiles & Migration
 const seedProfiles = async () => {
+    let defaultProfileId;
     const snapshot = await profilesCollection.get();
+
     if (snapshot.empty) {
         console.log('[SEED] Seeding initial profiles...');
         const initialProfiles = [
@@ -26,8 +28,33 @@ const seedProfiles = async () => {
             { name: 'Repuestos MOM', projectId: 'repuestosmom-main', color: '#e91e63' }
         ];
         for (const profile of initialProfiles) {
-            await profilesCollection.add(profile);
+            const docRef = await profilesCollection.add(profile);
+            if (!defaultProfileId) defaultProfileId = docRef.id;
         }
+    } else {
+        defaultProfileId = snapshot.docs[0].id;
+    }
+
+    // Migration: Assign orphan projects to the default profile
+    console.log('[MIGRATION] Checking for projects without profileId...');
+    const orphanProjects = await projectsCollection.where('profileId', '==', null).get();
+    const projectsWithoutField = await projectsCollection.orderBy('name').get(); // Fallback to check all if needed, but Firestore 'where' on missing fields is tricky
+
+    // Better way to find projects without the field: loop and check docs
+    const allProjects = await projectsCollection.get();
+    let migratedCount = 0;
+
+    for (const doc of allProjects.docs) {
+        if (!doc.data().profileId) {
+            await doc.ref.update({ profileId: defaultProfileId });
+            migratedCount++;
+        }
+    }
+
+    if (migratedCount > 0) {
+        console.log(`[MIGRATION] Successfully migrated ${migratedCount} projects to profile ${defaultProfileId}.`);
+    } else {
+        console.log('[MIGRATION] No orphan projects found.');
     }
 };
 
