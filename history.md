@@ -18,8 +18,12 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Estado**: Ecosistema con Arquitectura de Nivel Empresa.
 
 ### 2026-01-27
+- **Hito**: Sistema Multi-perfil Dinámico.
+- **Detalle**: Implementación de una arquitectura de "Entornos" que permite al Dashboard cambiar entre diferentes proyectos de GCP (CTO Sellside vs RepuestosMOM) dinámicamente. 
+- **Componentes**: Nueva colección de `profiles` en Firestore, API de gestión de entornos y componente `ProfileSwitcher` en el frontend.
 - **Hito**: Securización de "La Brújula" (AI Service).
-- **Detalle**: Migración de credenciales de Odoo desde código fuente a **Google Cloud Secret Manager**. Implementación de inicialización asíncrona para asegurar la carga de secretos antes de levantar el servidor de flujos.
+- **Detalle**: Migración de credenciales de Odoo a **Secret Manager**. Implementación de inicialización asíncrona.
+- **Resolución**: Se corrigió error de despliegue (`Default STARTUP TCP probe failed`) mediante la asignación del rol `Secret Accessor` a la Service Account de Cloud Run.
 - **Hito**: Consolidación de Autenticación.
 - **Detalle**: Verificación de flujo completo One Tap -> Dashboard -> API (JWT) -> Firestore.
 - **Estado**: Todo el codebase principal es ahora "Production Ready" bajo estándares de seguridad de Antigravity.

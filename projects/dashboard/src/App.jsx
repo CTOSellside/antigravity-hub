@@ -4,18 +4,22 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import OneTapLogin from './OneTapLogin'
 import ProjectCharts from './ProjectCharts'
 import ChatBubble from './ChatBubble'
+import ProfileSwitcher from './ProfileSwitcher'
 
 function App() {
     const [user, setUser] = useState(null)
     const [projects, setProjects] = useState([])
+    const [profiles, setProfiles] = useState([])
+    const [activeProfile, setActiveProfile] = useState(null)
     const [loading, setLoading] = useState(true)
-    const API_URL = 'https://api-service-nm65jwwkta-uc.a.run.app/api/projects'
+
+    const BASE_URL = 'https://api-service-nm65jwwkta-uc.a.run.app/api'
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser)
             if (currentUser) {
-                fetchProjects()
+                initDashboard()
             } else {
                 setLoading(false)
             }
@@ -23,13 +27,35 @@ function App() {
         return () => unsubscribe()
     }, [])
 
-    const fetchProjects = async () => {
+    const initDashboard = async () => {
         try {
             const token = await auth.currentUser.getIdToken()
-            const response = await fetch(API_URL, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+
+            // 1. Fetch Profiles
+            const profileRes = await fetch(`${BASE_URL}/profiles`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            const profileData = await profileRes.json()
+            setProfiles(profileData)
+
+            if (profileData.length > 0) {
+                const defaultProfile = profileData[0];
+                setActiveProfile(defaultProfile);
+                fetchProjects(defaultProfile.id, token);
+            } else {
+                setLoading(false)
+            }
+        } catch (err) {
+            console.error('Error initializing dashboard:', err)
+            setLoading(false)
+        }
+    }
+
+    const fetchProjects = async (profileId, token) => {
+        try {
+            const authToken = token || await auth.currentUser.getIdToken()
+            const response = await fetch(`${BASE_URL}/projects?profileId=${profileId}`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
             })
             const data = await response.json()
             setProjects(data)
@@ -38,6 +64,12 @@ function App() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleProfileChange = (profile) => {
+        setActiveProfile(profile);
+        setLoading(true);
+        fetchProjects(profile.id);
     }
 
     const handleLogout = () => {
@@ -49,30 +81,39 @@ function App() {
     }
 
     return (
-        <div className="container">
+        <div className="container" style={{ '--profile-color': activeProfile?.color || '#1a73e8' }}>
             <header className="header">
-                <div className="user-info">
-                    {user && (
-                        <>
-                            <span>Hola, {user.displayName}</span>
-                            <button className="logout-btn" onClick={handleLogout}>Cerrar Sesión</button>
-                        </>
+                <div className="header-top">
+                    <div className="user-info">
+                        {user && (
+                            <>
+                                <span>Hola, {user.displayName}</span>
+                                <button className="logout-btn" onClick={handleLogout}>Cerrar Sesión</button>
+                            </>
+                        )}
+                    </div>
+                    {profiles.length > 0 && (
+                        <ProfileSwitcher
+                            profiles={profiles}
+                            activeProfile={activeProfile}
+                            onProfileChange={handleProfileChange}
+                        />
                     )}
                 </div>
                 <h1>Project Hub Dashboard</h1>
-                <p>Gestionando el futuro de Antigravity con Javi</p>
+                <p>Gestionando el futuro de Antigravity en el entorno <strong>{activeProfile?.name}</strong></p>
             </header>
 
             {projects.length > 0 && <ProjectCharts projects={projects} />}
 
             <main className="dashboard-grid">
                 {loading ? (
-                    <div className="loader">Cargando proyectos...</div>
+                    <div className="loader">Cargando proyectos de {activeProfile?.name}...</div>
                 ) : projects.length === 0 ? (
-                    <p className="empty-msg">No hay proyectos registrados aún.</p>
+                    <p className="empty-msg">No hay proyectos registrados en este perfil.</p>
                 ) : (
                     projects.map(project => (
-                        <div key={project.id} className="project-card">
+                        <div key={project.id} className="project-card" style={{ borderTopColor: activeProfile?.color }}>
                             <div className="card-badge">{project.status}</div>
                             <h3>{project.name}</h3>
                             <p className="owner">Owner: {project.owner}</p>
@@ -83,8 +124,8 @@ function App() {
             </main>
 
             <footer className="footer">
-                <div className="shimmer-dot"></div>
-                <span>Rosa DevOps AI Agent</span>
+                <div className="shimmer-dot" style={{ backgroundColor: activeProfile?.color }}></div>
+                <span>Antigravity Multi-Profile Hub</span>
             </footer>
 
             <ChatBubble />

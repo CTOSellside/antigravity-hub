@@ -10,13 +10,15 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 ### To Do
 - [ ] Configurar primer proyecto específico <!-- id: 4 -->
 - [ ] Vincular con GitHub Repository <!-- id: 5 -->
-- [ ] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
-- [ ] Desarrollar Dashboard de Proyectos (Frontend) <!-- id: 32 -->
-
 
 ### In Progress
 
 ### Done
+- [x] Multi-perfil Dinámico (Switching de Entornos) <!-- id: 65 -->
+- [x] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
+- [x] Desarrollar Dashboard de Proyectos (Frontend) <!-- id: 32 -->
+- [x] Securización de `ai-service` (Secret Manager) <!-- id: 64 -->
+- [x] Implementar Autenticación (Firebase Auth) <!-- id: 57 -->
 - [x] Despliegue inicial de `hello-world` <!-- id: 7 -->
 - [x] Definir estrategia de múltiples perfiles <!-- id: 8 -->
 - [x] Estructuración del Project Hub <!-- id: 7 -->
@@ -27,15 +29,9 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 - [x] Verificar despliegue en Cloud Run <!-- id: 31 -->
 - [x] Integración de Secret Manager <!-- id: 58 -->
 - [x] Persistencia con Firestore <!-- id: 59 -->
-- [x] Implementar Autenticación (Firebase Auth) <!-- id: 57 -->
-- [x] Securización de `ai-service` (Secret Manager) <!-- id: 64 -->
 
 ### Roadmap (Ideas para Javi)
 - [ ] Conectar el segundo proyecto (RepuestosMOM) al Dashboard <!-- id: 60 -->
 - [ ] Añadir Gráficos de progreso (Métrica Scrum) <!-- id: 61 -->
 - [ ] Notificaciones automáticas vía Slack/Email ante fallos de despliegue <!-- id: 62 -->
 - [ ] Crear un servicio de "IA Brújula" que analice los logs <!-- id: 63 -->
-
-
-
-

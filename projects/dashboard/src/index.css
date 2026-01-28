@@ -6,6 +6,8 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --accent: #38bdf8;
   --text-dim: #94a3b8;
+  --primary: #38bdf8;
+  --profile-color: #38bdf8;
 }
 
 body {
@@ -33,6 +35,7 @@ body {
   margin: 0;
   background: linear-gradient(to right, #38bdf8, #818cf8);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -41,6 +44,68 @@ body {
   font-size: 1.2rem;
   margin-top: 1rem;
 }
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3rem;
+  padding: 0 1rem;
+}
+
+.profile-switcher {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--glass);
+  padding: 0.5rem 1.2rem;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+}
+
+.profile-switcher label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+}
+
+.select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.profile-switcher select {
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid var(--profile-color);
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  font-family: 'Outfit', sans-serif;
+}
+
+.profile-switcher select:hover {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+}
+
+.profile-indicator {
+  position: absolute;
+  right: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--profile-color);
+  pointer-events: none;
+}
+
 
 .metrics-grid {
   display: grid;
@@ -71,10 +136,17 @@ body {
   gap: 2rem;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
 .project-card {
   background: var(--glass);
   backdrop-filter: blur(12px);
   border: 1px solid var(--glass-border);
+  border-top: 4px solid var(--profile-color);
   border-radius: 24px;
   padding: 2rem;
   position: relative;
@@ -84,31 +156,9 @@ body {
 
 .project-card:hover {
   transform: translateY(-8px);
-  border-color: var(--accent);
+  border-color: var(--profile-color);
 }
 
-.project-card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.card-badge {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: rgba(56, 189, 248, 0.1);
-  color: var(--accent);
-  padding: 0.4rem 1rem;
-  border-radius: 99px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-}
-
-.owner {
-  color: var(--text-dim);
-  margin-bottom: 2rem;
-}
 
 .timestamp {
   display: block;
