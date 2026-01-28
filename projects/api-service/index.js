@@ -2,17 +2,74 @@ const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Firestore } = require('@google-cloud/firestore');
+const xmlrpc = require('xmlrpc');
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 const app = express();
 const port = process.env.PORT || 8080;
 
+// Initialize clients
+const secretClient = new SecretManagerServiceClient();
+const firestore = new Firestore();
+
+async function getSecret(name) {
+    try {
+        const [version] = await secretClient.accessSecretVersion({
+            name: `projects/antigravity-cto/secrets/${name}/versions/latest`,
+        });
+        return version.payload.data.toString().trim();
+    } catch (err) {
+        console.error(`[SECRET-ERROR] Error accessing secret ${name}:`, err);
+        return null;
+    }
+}
+
+// Odoo Configuration & Helper
+let odooConfig = null;
+const initOdoo = async () => {
+    console.log('[INIT] Loading Odoo secrets...');
+    const url = await getSecret('SS_ODOO_URL');
+    if (!url) return null;
+
+    odooConfig = {
+        url,
+        db: await getSecret('SS_ODOO_DB'),
+        user: await getSecret('SS_ODOO_USER'),
+        pass: await getSecret('SS_ODOO_PASSWORD'),
+        host: new URL(url).hostname
+    };
+    return odooConfig;
+};
+
+const getOdooData = async () => {
+    if (!odooConfig) await initOdoo();
+    if (!odooConfig) return [];
+
+    const common = xmlrpc.createSecureClient({ host: odooConfig.host, port: 443, path: '/xmlrpc/2/common' });
+    const object = xmlrpc.createSecureClient({ host: odooConfig.host, port: 443, path: '/xmlrpc/2/object' });
+
+    return new Promise((resolve, reject) => {
+        common.methodCall('authenticate', [odooConfig.db, odooConfig.user, odooConfig.pass, {}], (err, uid) => {
+            if (err || !uid) return reject(err || new Error('Auth failed'));
+
+            object.methodCall('execute_kw', [
+                odooConfig.db, uid, odooConfig.pass,
+                'product.template', 'search_read',
+                [[['type', '=', 'product'], ['qty_available', '>', 0]]],
+                { fields: ['name', 'list_price', 'qty_available'], limit: 6, order: 'qty_available desc' }
+            ], (err, products) => {
+                if (err) return reject(err);
+                resolve(products);
+            });
+        });
+    });
+};
+
 // Initialize Firebase Admin (uses default credentials in GCP)
 admin.initializeApp();
-
 app.use(cors());
 app.use(express.json());
 
 // Initialize Firestore
-const firestore = new Firestore();
 const projectsCollection = firestore.collection('projects');
 const profilesCollection = firestore.collection('profiles');
 
@@ -199,6 +256,17 @@ app.delete('/api/projects/:id', verifyToken, async (req, res) => {
     }
 });
 
+
+// GET /api/inventory - Proxy to Odoo for stock highlights (Secured)
+app.get('/api/inventory', verifyToken, async (req, res) => {
+    try {
+        const products = await getOdooData();
+        res.json(products);
+    } catch (error) {
+        console.error('[INVENTORY-API-ERROR]', error);
+        res.status(500).json({ error: 'Failed to fetch inventory from Odoo' });
+    }
+});
 
 app.listen(port, async () => {
     await seedProfiles();

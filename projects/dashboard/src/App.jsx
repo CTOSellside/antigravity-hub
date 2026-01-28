@@ -6,13 +6,16 @@ import ProjectCharts from './ProjectCharts'
 import ChatBubble from './ChatBubble'
 import ProfileMenu from './ProfileMenu'
 import ProjectModal from './ProjectModal'
+import InventoryHighlights from './InventoryHighlights'
 
 function App() {
     const [user, setUser] = useState(null)
     const [projects, setProjects] = useState([])
     const [profiles, setProfiles] = useState([])
     const [activeProfile, setActiveProfile] = useState(null)
+    const [inventory, setInventory] = useState([])
     const [loading, setLoading] = useState(true)
+    const [invLoading, setInvLoading] = useState(false)
     const [showProfileMenu, setShowProfileMenu] = useState(false)
     const [showProjectModal, setShowProjectModal] = useState(false)
     const [editingProject, setEditingProject] = useState(null)
@@ -63,10 +66,36 @@ function App() {
             })
             const data = await response.json()
             setProjects(data)
+
+            // Fetch inventory if Repuestos MOM
+            const profile = profiles.find(p => p.id === profileId) || activeProfile
+            if (profile?.name === 'Repuestos MOM') {
+                fetchInventory(authToken)
+            } else {
+                setInventory([]) // Clear if not Repuestos MOM
+            }
         } catch (err) {
             console.error('Error fetching projects:', err)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchInventory = async (token) => {
+        setInvLoading(true)
+        try {
+            const authToken = token || await auth.currentUser.getIdToken()
+            const response = await fetch(`${BASE_URL}/inventory`, {
+                headers: { 'Authorization': `Bearer ${authToken}` }
+            })
+            if (response.ok) {
+                const data = await response.json()
+                setInventory(data)
+            }
+        } catch (err) {
+            console.error('Error fetching inventory:', err)
+        } finally {
+            setInvLoading(false)
         }
     }
 
@@ -189,6 +218,8 @@ function App() {
                     onClose={() => setShowProjectModal(false)}
                 />
             )}
+
+            <InventoryHighlights products={inventory} loading={invLoading} />
 
             {projects.length > 0 && <ProjectCharts projects={projects} />}
 
