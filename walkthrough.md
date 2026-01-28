@@ -9,7 +9,17 @@ Hemos desbloqueado la capacidad de **ejecutar código desde el Dashboard**. Este
 ### 🛡️ Características del Protocolo
 - **Instructions In-line**: El usuario puede proveer contexto a la IA antes de disparar la ejecución.
 - **Acción Zap**: Al presionar el rayo, la tarea escala al estado `In Progress` y se gatilla un evento de red en el Hub.
+- **Scaffolding Automático 3.0**: Si la tarea implica crear un proyecto, Rosa crea automáticamente un **repositorio privado en GitHub** e inicializa el registro en Firestore.
 - **Feedback Proactivo**: El sistema notifica a Google Chat vía "La Brújula", confirmando: *"Entendido, Javi. Iniciando el proceso técnico ahora mismo."*
+
+---
+
+## 🏗️ Motor de Scaffolding Real
+
+Hemos elevado la automatización a nivel de infraestructura pura:
+- **GitHub Integration**: Creación automática de repositorios usando tokens securizados.
+- **Project Discovery**: Los nuevos repositorios aparecen automáticamente en el Dashboard sin intervención manual.
+- **Git Ready**: Notificaciones con las URLs y comandos necesarios para clonar y empezar a codear.
 
 ---
 

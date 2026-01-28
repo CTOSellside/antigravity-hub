@@ -30,5 +30,10 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Hito**: Consolidación de Autenticación.
 - **Detalle**: Verificación de flujo completo One Tap -> Dashboard -> API (JWT) -> Firestore.
 - **Estado**: Todo el codebase principal es ahora "Production Ready" bajo estándares de seguridad de Antigravity.
-
-
+### 2026-01-28
+- **Hito**: Protocolo Antigravity & Scaffolding 3.0.
+- **Detalle**: Implementación de ejecución técnica desde el Dashboard. Automatización de creación de repositorios en GitHub e inicialización en Firestore.
+- **Hito**: Gobernanza de Notificaciones (ChatOps separation).
+- **Decisión**: Se separaron las alertas operativas (MOM Inventory) de las notificaciones de infraestructura (ChatOps).
+- **Razón**: Mantener jerarquías de acceso y evitar ruido en los canales operativos. Se introdujo `SS_CHATOPS_WEBHOOK`.
+- **Estado**: Implementado y desplegado en Cloud Run.

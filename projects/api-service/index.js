@@ -597,10 +597,10 @@ app.post('/api/backlog/:id/execute', verifyToken, async (req, res) => {
             updatedAt: new Date().toISOString()
         });
 
-        // Antigravity Protocol Step 1: Notify Google Chat
-        const webhookUrl = await getSecret('SS_GOOGLE_CHAT_WEBHOOK');
-        if (webhookUrl) {
-            await axios.post(webhookUrl, {
+        // Antigravity Protocol Step 1: Notify Google Chat via ChatOps Channel
+        const chatOpsWebhook = await getSecret('SS_CHATOPS_WEBHOOK');
+        if (chatOpsWebhook) {
+            await axios.post(chatOpsWebhook, {
                 text: `🚀 *Antigravity Protocol: Ejecución Iniciada*\n\nJavi ha ordenado la ejecución de: **${task.title}**\n📝 *Instrucciones:* ${finalInstructions}\n\n🤖 *Rosa:* "Entendido, Javi. Iniciando el proceso técnico ahora mismo."`
             });
         }
@@ -622,9 +622,9 @@ app.post('/api/backlog/:id/execute', verifyToken, async (req, res) => {
 
                 executionResult = `✅ Infraestructura Creada: ${repoUrl}`;
 
-                // Notify Google Chat with extra details
-                if (webhookUrl) {
-                    await axios.post(webhookUrl, {
+                // Notify Google ChatOps space with extra details
+                if (chatOpsWebhook) {
+                    await axios.post(chatOpsWebhook, {
                         text: `✨ *Scaffolding Completado con Éxito*\n\nJavi, he creado el repositorio: **${task.title}**\n🔗 *GitHub:* ${repoUrl}\n\n🛠️ *Pasos sugeridos:* \n\`\`\`bash\ngit remote add origin ${repoSsh}\ngit push -u origin main\n\`\`\`\n\nEl proyecto ha sido registrado automáticamente en tu Dashboard. 🦾🛡️`
                     });
                 }
