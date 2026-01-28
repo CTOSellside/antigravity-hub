@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth'
 import OneTapLogin from './OneTapLogin'
 import ProjectCharts from './ProjectCharts'
 import ChatBubble from './ChatBubble'
-import ProfileSwitcher from './ProfileSwitcher'
+import ProfileMenu from './ProfileMenu'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -12,6 +12,7 @@ function App() {
     const [profiles, setProfiles] = useState([])
     const [activeProfile, setActiveProfile] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [showProfileMenu, setShowProfileMenu] = useState(false)
 
     const BASE_URL = 'https://api-service-nm65jwwkta-uc.a.run.app/api'
 
@@ -72,6 +73,24 @@ function App() {
         fetchProjects(profile.id);
     }
 
+    const handleAddProfile = async (newProfile) => {
+        try {
+            const token = await auth.currentUser.getIdToken()
+            const response = await fetch(`${BASE_URL}/profiles`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(newProfile)
+            })
+            const createdProfile = await response.json()
+            setProfiles([...profiles, createdProfile])
+        } catch (err) {
+            console.error('Error adding profile:', err)
+        }
+    }
+
     const handleLogout = () => {
         signOut(auth)
     }
@@ -81,28 +100,37 @@ function App() {
     }
 
     return (
-        <div className="container" style={{ '--profile-color': activeProfile?.color || '#1a73e8' }}>
+        <div className="container" style={{ '--profile-color': activeProfile?.color || '#38bdf8' }}>
             <header className="header">
                 <div className="header-top">
                     <div className="user-info">
                         {user && (
                             <>
-                                <span>Hola, {user.displayName}</span>
+                                <div className="user-pill" onClick={() => setShowProfileMenu(true)}>
+                                    <div className="status-dot"></div>
+                                    <span>{user.displayName}</span>
+                                    <div className="profile-tag" style={{ backgroundColor: activeProfile?.color }}>
+                                        {activeProfile?.name}
+                                    </div>
+                                </div>
                                 <button className="logout-btn" onClick={handleLogout}>Cerrar Sesión</button>
                             </>
                         )}
                     </div>
-                    {profiles.length > 0 && (
-                        <ProfileSwitcher
-                            profiles={profiles}
-                            activeProfile={activeProfile}
-                            onProfileChange={handleProfileChange}
-                        />
-                    )}
                 </div>
                 <h1>Project Hub Dashboard</h1>
                 <p>Gestionando el futuro de Antigravity en el entorno <strong>{activeProfile?.name}</strong></p>
             </header>
+
+            {showProfileMenu && (
+                <ProfileMenu
+                    profiles={profiles}
+                    activeProfile={activeProfile}
+                    onProfileChange={handleProfileChange}
+                    onAddProfile={handleAddProfile}
+                    onClose={() => setShowProfileMenu(false)}
+                />
+            )}
 
             {projects.length > 0 && <ProjectCharts projects={projects} />}
 

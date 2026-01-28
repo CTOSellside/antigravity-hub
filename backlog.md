@@ -14,6 +14,7 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 ### In Progress
 
 ### Done
+- [x] Menú de Gestión de Perfiles (UI Premium) <!-- id: 66 -->
 - [x] Multi-perfil Dinámico (Switching de Entornos) <!-- id: 65 -->
 - [x] Configurar Cloud Build para despliegue automático <!-- id: 6 -->
 - [x] Desarrollar Dashboard de Proyectos (Frontend) <!-- id: 32 -->

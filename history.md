@@ -18,6 +18,8 @@ Registro de hitos y decisiones arquitectónicas tomadas durante el desarrollo de
 - **Estado**: Ecosistema con Arquitectura de Nivel Empresa.
 
 ### 2026-01-27
+- **Hito**: Menú de Gestión de Perfiles UI.
+- **Detalle**: Evolución del selector de entornos a un menú de gestión completo. Ahora permite visualizar todos los perfiles en un modal y añadir nuevos entornos directamente desde el Dashboard.
 - **Hito**: Sistema Multi-perfil Dinámico.
 - **Detalle**: Implementación de una arquitectura de "Entornos" que permite al Dashboard cambiar entre diferentes proyectos de GCP (CTO Sellside vs RepuestosMOM) dinámicamente. 
 - **Resolución**: Se corrigieron errores de despliegue y configuración de OAuth (`origin_mismatch`).
