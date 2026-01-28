@@ -60,7 +60,7 @@ const getOdooData = async () => {
                 odooConfig.db, uid, odooConfig.pass,
                 'product.product', 'search_read',
                 [[['type', 'in', ['product', 'consu']], ['qty_available', '>', 0]]],
-                { fields: ['name', 'list_price', 'qty_available'], limit: 8, order: 'qty_available desc' }
+                { fields: ['name', 'list_price', 'qty_available'], limit: 8 }
             ], (err, products) => {
                 if (err) {
                     console.error('[ODOO-EXECUTE-FAILED]', err);
