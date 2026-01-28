@@ -251,7 +251,7 @@ function App() {
                         totalScope={scrumData.totalScope}
                     />
                     <BacklogList
-                        apiBaseUrl={API_BASE_URL}
+                        apiBaseUrl={BASE_URL}
                         auth={auth}
                     />
                 </>
