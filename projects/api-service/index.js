@@ -1,4 +1,5 @@
 const express = require('express');
+const axios = require('axios');
 const cors = require('cors');
 const admin = require('firebase-admin');
 const { Firestore } = require('@google-cloud/firestore');
@@ -265,6 +266,52 @@ app.get('/api/inventory', verifyToken, async (req, res) => {
     } catch (error) {
         console.error('[INVENTORY-API-ERROR]', error);
         res.status(500).json({ error: 'Failed to fetch inventory from Odoo' });
+    }
+});
+
+// GET /api/cron/check-stock - Proactive alert for low stock (Internal/Secured)
+app.get('/api/cron/check-stock', async (req, res) => {
+    try {
+        console.log('[CRON] Starting proactive stock check...');
+        const webhookUrl = await getSecret('SS_GOOGLE_CHAT_WEBHOOK');
+        if (!webhookUrl) throw new Error('Webhook URL not found');
+
+        // Reuse initOdoo logic but fetch more products if needed
+        if (!odooConfig) await initOdoo();
+
+        const common = xmlrpc.createSecureClient({ host: odooConfig.host, port: 443, path: '/xmlrpc/2/common' });
+        const object = xmlrpc.createSecureClient({ host: odooConfig.host, port: 443, path: '/xmlrpc/2/object' });
+
+        common.methodCall('authenticate', [odooConfig.db, odooConfig.user, odooConfig.pass, {}], async (err, uid) => {
+            if (err || !uid) return res.status(500).json({ error: 'Odoo auth failed' });
+
+            object.methodCall('execute_kw', [
+                odooConfig.db, uid, odooConfig.pass,
+                'product.template', 'search_read',
+                [[['type', '=', 'product'], ['qty_available', '<', 5], ['qty_available', '>', 0]]],
+                { fields: ['name', 'qty_available'], limit: 10 }
+            ], async (err, lowStockProducts) => {
+                if (err) return res.status(500).json({ error: 'Odoo search failed' });
+
+                if (lowStockProducts.length > 0) {
+                    console.log(`[CRON] Found ${lowStockProducts.length} low stock items. Sending alert...`);
+
+                    const productList = lowStockProducts.map(p => `• *${p.name}*: ${p.qty_available} unidades`).join('\n');
+                    const message = {
+                        text: `⚠️ *Alerta de Stock Bajo (IA Brújula)*\n\nJavi, he detectado que los siguientes repuestos críticos están por agotarse:\n\n${productList}\n\n👉 Revisa Odoo para gestionar reposiciones.`
+                    };
+
+                    await axios.post(webhookUrl, message);
+                    res.json({ message: 'Alerts sent successfully', count: lowStockProducts.length });
+                } else {
+                    console.log('[CRON] No low stock items discovered. Skipping alert.');
+                    res.json({ message: 'No alerts needed' });
+                }
+            });
+        });
+    } catch (error) {
+        console.error('[CRON-ERROR]', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
