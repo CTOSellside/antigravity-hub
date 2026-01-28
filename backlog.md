@@ -14,6 +14,7 @@ Este archivo centraliza todas las tareas de alto nivel para los diferentes proye
 ### In Progress
 
 ### Done
+- [x] Project Administration 2.0 (CRUD de Proyectos) <!-- id: 67 -->
 - [x] Menú de Gestión de Perfiles (UI Premium) <!-- id: 66 -->
 - [x] Multi-perfil Dinámico (Switching de Entornos) <!-- id: 65 -->
 - [x] Configurar Cloud Build para despliegue automático <!-- id: 6 -->

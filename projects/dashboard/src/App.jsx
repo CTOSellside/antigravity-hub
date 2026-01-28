@@ -5,6 +5,7 @@ import OneTapLogin from './OneTapLogin'
 import ProjectCharts from './ProjectCharts'
 import ChatBubble from './ChatBubble'
 import ProfileMenu from './ProfileMenu'
+import ProjectModal from './ProjectModal'
 
 function App() {
     const [user, setUser] = useState(null)
@@ -13,6 +14,8 @@ function App() {
     const [activeProfile, setActiveProfile] = useState(null)
     const [loading, setLoading] = useState(true)
     const [showProfileMenu, setShowProfileMenu] = useState(false)
+    const [showProjectModal, setShowProjectModal] = useState(false)
+    const [editingProject, setEditingProject] = useState(null)
 
     const BASE_URL = 'https://api-service-nm65jwwkta-uc.a.run.app/api'
 
@@ -40,9 +43,9 @@ function App() {
             setProfiles(profileData)
 
             if (profileData.length > 0) {
-                const defaultProfile = profileData[0];
-                setActiveProfile(defaultProfile);
-                fetchProjects(defaultProfile.id, token);
+                const ctoProfile = profileData.find(p => p.name === 'CTO Sellside') || profileData[0];
+                setActiveProfile(ctoProfile);
+                fetchProjects(ctoProfile.id, token);
             } else {
                 setLoading(false)
             }
@@ -91,6 +94,47 @@ function App() {
         }
     }
 
+    const handleSaveProject = async (projectData, projectId) => {
+        try {
+            const token = await auth.currentUser.getIdToken()
+            const url = projectId ? `${BASE_URL}/projects/${projectId}` : `${BASE_URL}/projects`
+            const method = projectId ? 'PATCH' : 'POST'
+
+            const response = await fetch(url, {
+                method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(projectData)
+            })
+
+            if (response.ok) {
+                setShowProjectModal(false);
+                setEditingProject(null);
+                fetchProjects(activeProfile.id); // Refresh
+            }
+        } catch (err) {
+            console.error('Error saving project:', err)
+        }
+    }
+
+    const handleDeleteProject = async (projectId) => {
+        if (!window.confirm('¿Estás seguro de eliminar este proyecto?')) return;
+        try {
+            const token = await auth.currentUser.getIdToken()
+            const response = await fetch(`${BASE_URL}/projects/${projectId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            if (response.ok) {
+                fetchProjects(activeProfile.id);
+            }
+        } catch (err) {
+            console.error('Error deleting project:', err)
+        }
+    }
+
     const handleLogout = () => {
         signOut(auth)
     }
@@ -117,6 +161,11 @@ function App() {
                             </>
                         )}
                     </div>
+                    {user && (
+                        <button className="add-project-btn" onClick={() => { setEditingProject(null); setShowProjectModal(true); }}>
+                            + Nuevo Proyecto
+                        </button>
+                    )}
                 </div>
                 <h1>Project Hub Dashboard</h1>
                 <p>Gestionando el futuro de Antigravity en el entorno <strong>{activeProfile?.name}</strong></p>
@@ -132,6 +181,15 @@ function App() {
                 />
             )}
 
+            {showProjectModal && (
+                <ProjectModal
+                    project={editingProject}
+                    profileId={activeProfile?.id}
+                    onSave={handleSaveProject}
+                    onClose={() => setShowProjectModal(false)}
+                />
+            )}
+
             {projects.length > 0 && <ProjectCharts projects={projects} />}
 
             <main className="dashboard-grid">
@@ -142,6 +200,10 @@ function App() {
                 ) : (
                     projects.map(project => (
                         <div key={project.id} className="project-card" style={{ borderTopColor: activeProfile?.color }}>
+                            <div className="card-actions">
+                                <button className="icon-btn edit" onClick={() => { setEditingProject(project); setShowProjectModal(true); }}>✎</button>
+                                <button className="icon-btn delete" onClick={() => handleDeleteProject(project.id)}>×</button>
+                            </div>
                             <div className="card-badge">{project.status}</div>
                             <h3>{project.name}</h3>
                             <p className="owner">Owner: {project.owner}</p>
@@ -150,6 +212,7 @@ function App() {
                     ))
                 )}
             </main>
+
 
             <footer className="footer">
                 <div className="shimmer-dot" style={{ backgroundColor: activeProfile?.color }}></div>

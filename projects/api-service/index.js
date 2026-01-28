@@ -29,30 +29,28 @@ const seedProfiles = async () => {
         ];
         for (const profile of initialProfiles) {
             const docRef = await profilesCollection.add(profile);
-            if (!defaultProfileId) defaultProfileId = docRef.id;
+            if (profile.name === 'CTO Sellside') defaultProfileId = docRef.id;
         }
     } else {
-        defaultProfileId = snapshot.docs[0].id;
+        const ctoDoc = snapshot.docs.find(doc => doc.data().name === 'CTO Sellside');
+        defaultProfileId = ctoDoc ? ctoDoc.id : snapshot.docs[0].id;
     }
 
-    // Migration: Assign orphan projects to the default profile
+    // Migration: Assign orphan projects to the default profile (CTO Sellside)
     console.log('[MIGRATION] Checking for projects without profileId...');
-    const orphanProjects = await projectsCollection.where('profileId', '==', null).get();
-    const projectsWithoutField = await projectsCollection.orderBy('name').get(); // Fallback to check all if needed, but Firestore 'where' on missing fields is tricky
-
-    // Better way to find projects without the field: loop and check docs
     const allProjects = await projectsCollection.get();
     let migratedCount = 0;
 
     for (const doc of allProjects.docs) {
-        if (!doc.data().profileId) {
+        const data = doc.data();
+        if (!data.profileId) {
             await doc.ref.update({ profileId: defaultProfileId });
             migratedCount++;
         }
     }
 
     if (migratedCount > 0) {
-        console.log(`[MIGRATION] Successfully migrated ${migratedCount} projects to profile ${defaultProfileId}.`);
+        console.log(`[MIGRATION] Successfully migrated ${migratedCount} projects to profile ${defaultProfileId} (CTO Sellside).`);
     } else {
         console.log('[MIGRATION] No orphan projects found.');
     }
@@ -81,9 +79,10 @@ app.get('/api', (req, res) => {
     res.json({
         message: '¡Hola desde la API de Proyectos!',
         secret_test: testSecret,
-        status: 'Online with Multi-Profile Support'
+        status: 'Online with Project Admin 2.0 Support'
     });
 });
+
 
 // GET /api/profiles - List all profiles (Secured)
 app.get('/api/profiles', verifyToken, async (req, res) => {
@@ -173,6 +172,33 @@ app.get('/api/projects/stats', verifyToken, async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+// PATCH /api/projects/:id - Update an existing project (Secured)
+app.patch('/api/projects/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        await projectsCollection.doc(id).update({
+            ...updates,
+            updatedAt: new Date().toISOString()
+        });
+        res.json({ id, ...updates, message: 'Project updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/projects/:id - Delete a project (Secured)
+app.delete('/api/projects/:id', verifyToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await projectsCollection.doc(id).delete();
+        res.json({ id, message: 'Project deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 
 app.listen(port, async () => {
     await seedProfiles();

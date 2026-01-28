@@ -261,25 +261,137 @@ body {
   margin-top: 1rem;
 }
 
-.primary-btn {
-  flex: 1;
+.primary-btn:hover {
+  background: #0ea5e9;
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Project Card Actions */
+.project-card {
+  position: relative;
+  overflow: visible;
+}
+
+.card-actions {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  transform: translateY(5px);
+  z-index: 10;
+}
+
+.project-card:hover .card-actions {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-border);
+  background: #1e293b;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.icon-btn.edit:hover {
+  background: var(--accent);
+  color: #0f172a;
+}
+
+.icon-btn.delete:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+/* Add Project Button */
+.add-project-btn {
   background: var(--accent);
   color: #0f172a;
   border: none;
-  padding: 0.8rem;
-  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
 }
 
-.secondary-btn {
-  flex: 1;
-  background: none;
+.add-project-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(56, 189, 248, 0.4);
+}
+
+/* Project Modal Specifics */
+.project-modal-container {
+  background: #1e293b;
+  width: 90%;
+  max-width: 450px;
+  border-radius: 20px;
   border: 1px solid var(--glass-border);
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: scaleIn 0.3s ease;
+}
+
+.project-form {
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #888;
+}
+
+.form-group input,
+.form-group select {
+  background: #0f172a;
+  border: 1px solid var(--glass-border);
+  padding: 0.7rem 1rem;
+  border-radius: 10px;
   color: white;
-  padding: 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--accent);
+}
+
+.empty-msg {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem;
+  color: #555;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 20px;
+  border: 1px dashed #333;
 }
 
 .project-card {
